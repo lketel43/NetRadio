@@ -22,16 +22,17 @@ CLASSES=\
 		src/Broadcaster.java \
 		src/Message.java
 
-classes: $(CLASSES:.java=.class)
-
-exec: $(OBJ)
-	$(CC) -o $@ $^ $(FLAGS)
-	mv exec src/
-
 all:
 	$(MAKE) classes
 	$(MAKE) exec
 
+classes: $(CLASSES:.java=.class)
+	mv $^ src/target
+
+exec: $(OBJ)
+	$(CC) -o $@ $^ $(FLAGS)
+	mv $(OBJ) src/target
+	mv exec src/target
 
 clean:
-	rm src/*.o src/*.class src/exec
+	rm src/target/*.o src/target/*.class src/target/exec
