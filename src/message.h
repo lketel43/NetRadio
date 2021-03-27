@@ -4,6 +4,8 @@
 #ifndef MESSAGE_H
 #define MESSAGE_H
 
+#include <stddef.h>
+
 // Taille des caractéristiques d'un message en octets
 #define MSG_ID_SIZE 8
 #define MSG_IP_SIZE 15
@@ -38,5 +40,8 @@ enum msg_type
     REOK,
     RUOK
   };
+
+
+size_t msglen (enum msg_type type);
 
 #endif
