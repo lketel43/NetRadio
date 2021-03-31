@@ -1,4 +1,3 @@
-import java.nio.ByteBuffer;
 import java.util.Arrays;
 
 public class Message{
@@ -12,8 +11,12 @@ public class Message{
     static final int MSG_PORT_SIZE = 4;
     static final int MSG_TYPE_SIZE = 4;
 
-    static final String MSG_END = "\r\n";
     static final int MSG_END_SIZE = 2;
+    static final byte MSG_R = (byte) '\r';
+    static final byte MSG_N = (byte) '\n';
+    static final byte[] MSG_END = {MSG_R, MSG_N};
+
+    static final byte[] BYTE_SPACE = {(byte) ' '};
 
     static final char DEFAULT_CHAR = '#'; 
     static final char DEFAULT_INT = '0';
@@ -36,8 +39,11 @@ public class Message{
         RUOK
     }
 
-    public static MsgType getMsgType(String[] msg){
-        switch(msg[0]){
+    /* */
+
+    public static MsgType getType(byte[] msg){
+        String type = new String(java.util.Arrays.copyOfRange(msg, 0, MSG_TYPE_SIZE));
+        switch(type){
             case "ACKM" : return MsgType.ACKM;
             case "DIFF" : return MsgType.DIFF;
             case "ENDM" : return MsgType.ENDM;
@@ -56,68 +62,74 @@ public class Message{
         }
     }
 
-    public static String getID(String[] msg){
-        MsgType type = getMsgType(msg);
+    public static String getID(byte[] msg){
+        MsgType type = getType(msg);
         switch(type){
-            case OLDM : return msg[2];
-            case DIFF : return msg[2];
-            case MESS : return msg[1];
-            case REGI : return msg[1];
-            case ITEM : return msg[1];
+            case OLDM : case DIFF : 
+                return new String(java.util.Arrays.copyOfRange(msg, MSG_TYPE_SIZE + 1 + MSG_NUM_MESS_SIZE + 1,
+                                                                    MSG_TYPE_SIZE + 1 + MSG_NUM_MESS_SIZE + 1 + MSG_ID_SIZE));
+            case MESS : case REGI : case ITEM : 
+                return new String(java.util.Arrays.copyOfRange(msg, MSG_TYPE_SIZE, MSG_TYPE_SIZE + MSG_ID_SIZE));
             default : throw new IllegalArgumentException("Wrong message format");
         }
     }
 
-    public static String getMsg(String[] msg){
-        MsgType type = getMsgType(msg);
+    public static String getMsg(byte[] msg){
+        MsgType type = getType(msg);
         switch(type){
-            case MESS : return msg[2];
-            case DIFF : return msg[3];
-            case OLDM : return msg[3];
+            case MESS : return new String(java.util.Arrays.copyOfRange(msg, MSG_TYPE_SIZE + 1 + MSG_ID_SIZE + 1,
+                                                                            MSG_TYPE_SIZE + 1 + MSG_ID_SIZE + 1 + MSG_MESS_SIZE));
+            case DIFF : case OLDM : return new String(java.util.Arrays.copyOfRange(msg, MSG_TYPE_SIZE + 1 + MSG_NUM_MESS_SIZE + 1 + MSG_ID_SIZE + 1,
+                                                                                        MSG_TYPE_SIZE + 1 + MSG_NUM_MESS_SIZE + 1 + MSG_ID_SIZE + 1 + MSG_MESS_SIZE));
             default : throw new IllegalArgumentException("Wrong message format");
         }
     }
 
-    public static String getNumMsg(String[] msg){
-        MsgType type = getMsgType(msg);
+    public static String getNumMsg(byte[] msg){
+        MsgType type = getType(msg);
         switch(type){
-            case DIFF : return msg[1];
-            case OLDM : return msg[1];
+            case DIFF : case OLDM :
+                return new String(java.util.Arrays.copyOfRange(msg, MSG_TYPE_SIZE + 1, MSG_TYPE_SIZE + 1 + MSG_NUM_MESS_SIZE));
             default : throw new IllegalArgumentException("Wrong message format");
         }
     }
 
-    public static int getNbMsg(String[] msg){
-        if(getMsgType(msg) == MsgType.OLDM) return Integer.parseInt(msg[1]);
+    public static int getNbMsg(byte[] msg){
+        if(getType(msg) == MsgType.OLDM) return Integer.parseInt(new String(java.util.Arrays.copyOfRange(msg, MSG_TYPE_SIZE + 1, MSG_TYPE_SIZE + 1 + MSG_NB_MESS)));
         throw new IllegalArgumentException("Wrong message format");
     }
 
-    public static String getIp1(String[] msg){
-        MsgType type = getMsgType(msg);
-        if(type == MsgType.REGI || type == MsgType.ITEM) return msg[2];
+    public static String getIp1(byte[] msg){
+        MsgType type = getType(msg);
+        if(type == MsgType.REGI || type == MsgType.ITEM) return new String(java.util.Arrays.copyOfRange(msg, MSG_TYPE_SIZE + 1 + MSG_ID_SIZE + 1, 
+                                                                                                             MSG_TYPE_SIZE + 1 + MSG_ID_SIZE + 1 + MSG_IP_SIZE));
         throw new IllegalArgumentException("Wrong message format");
     }
 
-    public static String getIp2(String[] msg){
-        MsgType type = getMsgType(msg);
-        if(type == MsgType.REGI || type == MsgType.ITEM) return msg[4];
+    public static String getIp2(byte[] msg){
+        MsgType type = getType(msg);
+        if(type == MsgType.REGI || type == MsgType.ITEM) return new String(java.util.Arrays.copyOfRange(msg, MSG_TYPE_SIZE + 1 + MSG_ID_SIZE + 1 + MSG_IP_SIZE + 1 + MSG_PORT_SIZE + 1, 
+                                                                                                             MSG_TYPE_SIZE + 1 + MSG_ID_SIZE + 1 + MSG_IP_SIZE + 1 + MSG_PORT_SIZE + 1 + MSG_IP_SIZE));
         throw new IllegalArgumentException("Wrong message format");
     }
 
-    public static int getPort1(String[] msg){
-        MsgType type = getMsgType(msg);
-        if(type == MsgType.REGI || type == MsgType.ITEM) return Integer.parseInt(msg[3]);
+    public static int getPort1(byte[] msg){
+        MsgType type = getType(msg);
+        if(type == MsgType.REGI || type == MsgType.ITEM) return Integer.parseInt(new String(java.util.Arrays.copyOfRange(msg, MSG_TYPE_SIZE + 1 + MSG_ID_SIZE + 1 + MSG_IP_SIZE + 1, 
+                                                                                                                              MSG_TYPE_SIZE + 1 + MSG_ID_SIZE + 1 + MSG_IP_SIZE + 1 + MSG_PORT_SIZE)));
         throw new IllegalArgumentException("Wrong message format");
     }
 
-    public static int getPort2(String[] msg){
-        MsgType type = getMsgType(msg);
-        if(type == MsgType.REGI || type == MsgType.ITEM) return Integer.parseInt(msg[5]);
+    public static int getPort2(byte[] msg){
+        MsgType type = getType(msg);
+        if(type == MsgType.REGI || type == MsgType.ITEM) return Integer.parseInt(new String(java.util.Arrays.copyOfRange(msg, MSG_TYPE_SIZE + 1 + MSG_ID_SIZE + 1 + MSG_IP_SIZE + 1 + MSG_PORT_SIZE + 1 + MSG_IP_SIZE + 1,
+                                                                                                                              MSG_TYPE_SIZE + 1 + MSG_ID_SIZE + 1 + MSG_IP_SIZE + 1 + MSG_PORT_SIZE + 1 + MSG_IP_SIZE + 1 + MSG_PORT_SIZE)));
         throw new IllegalArgumentException("Wrong message format");
     }
 
-    public static int getNumDiff(String[] msg){
-        if(getMsgType(msg) == MsgType.LINB) return Integer.parseInt(msg[1]);
+    public static int getNumDiff(byte[] msg){
+        if(getType(msg) == MsgType.LINB) return Integer.parseInt(new String(java.util.Arrays.copyOfRange(msg, MSG_TYPE_SIZE + 1, 
+                                                                                                              MSG_TYPE_SIZE + 1 + MSG_NUM_DIFF_SIZE)));
         throw new IllegalArgumentException("Wrong message format");
     }
 
@@ -219,7 +231,7 @@ public class Message{
                 byte[] port1 = intToCharBytes(fields[3], MSG_PORT_SIZE);
                 byte[] ip2 = ipToBytes(fields[4]);
                 byte[] port2 = intToCharBytes(fields[5], MSG_PORT_SIZE);
-                byte[][] bytes = {type, id, ip1, port1, ip2, port2};
+                byte[][] bytes = {type, BYTE_SPACE, id, BYTE_SPACE, ip1, BYTE_SPACE, port1, BYTE_SPACE, ip2, BYTE_SPACE, port2, MSG_END};
                 return createMsgFromBytes(bytes);
             case "OLDM" : case "DIFF" :
                 byte[] type2 = typeToBytes(fields[0]);
@@ -227,24 +239,24 @@ public class Message{
                 byte[] id2 = idToBytes(fields[2]);
                 String strMsg = getMsgFromString(msg);
                 byte[] mess = msgToBytes(strMsg);
-                byte[][] bytes2 = {type2, numMsg, id2, mess};
+                byte[][] bytes2 = {type2, BYTE_SPACE, numMsg, BYTE_SPACE, id2, BYTE_SPACE, mess, MSG_END};
                 return createMsgFromBytes(bytes2); 
             case "LAST" :
                 byte[] type3 = typeToBytes(fields[0]);
                 byte[] nbMsg = intToCharBytes(fields[1], MSG_NB_MESS);
-                byte[][] bytes3 = {type3, nbMsg};
+                byte[][] bytes3 = {type3, BYTE_SPACE, nbMsg, MSG_END};
                 return createMsgFromBytes(bytes3);
             case "MESS" :
                 byte[] type4 = typeToBytes(fields[0]);
                 byte[] id3 = idToBytes(fields[1]);
                 String strMsg2 = getMsgFromString(msg);
                 byte[] mess2 = msgToBytes(strMsg2);
-                byte[][] bytes4 = {type4, id3, mess2};
+                byte[][] bytes4 = {type4, BYTE_SPACE, id3, BYTE_SPACE, mess2, MSG_END};
                 return createMsgFromBytes(bytes4);
             case "LINB" :
                 byte[] type5 = typeToBytes(fields[0]);
                 byte[] numDiff = intToCharBytes(fields[1], MSG_NUM_DIFF_SIZE);
-                byte[][] bytes5 = {type5, numDiff};
+                byte[][] bytes5 = {type5, BYTE_SPACE, numDiff, MSG_END};
                 return createMsgFromBytes(bytes5);
             default : throw new IllegalArgumentException("Wrong message format");
 
