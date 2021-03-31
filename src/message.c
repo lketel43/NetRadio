@@ -1,8 +1,11 @@
 #include "message.h"
 
+#include <arpa/inet.h>
+
 #include <assert.h>
 #include <stdlib.h>
 #include <string.h>
+#include <stdio.h>
 
 size_t msglen (enum msg_type type)
 {
@@ -16,7 +19,7 @@ size_t msglen (enum msg_type type)
 
     case MESS:
       return len + MSG_ID_SIZE + MSG_MESS_SIZE + 2; // 156
-
+      
     case ITEM:
     case REGI:
       return len + MSG_ID_SIZE + 2*MSG_IP_SIZE + 2*MSG_PORT_SIZE + 5; // 57
@@ -74,9 +77,51 @@ static void set_msg_type (char *buf, enum msg_type type)
   strcpy (buf, msg_type_to_str(type));
 }
 
-static void set_msg_end (char *buf)
+static void add_msg_end (char *buf)
 {
-  strcpy (buf, MSG_END);
+  strcat (buf, MSG_END);
+}
+
+static void add_int (char *buf, int nb, int nb_width)
+{
+  char tmp[nb_width + 1];
+  snprintf (tmp, nb_width + 1, "%.*d", nb_width, nb);
+  strcat(buf, tmp);
+}
+
+static void add_separator (char *buf)
+{
+  size_t buf_len = strlen(buf);
+  buf[buf_len] = SEPARATOR_CHAR;
+  buf[buf_len + 1] = '\0';
+}
+
+static void add_string (char *buf, const char *str, size_t total_width)
+{
+  size_t buf_len = strlen(buf);
+  char *buf_end = buf + buf_len;  
+  char *end = stpncpy (buf_end, str, total_width); // si ne compile pas : utiliser snprintf...
+  memset (end, DEFAULT_CHAR, total_width - (end - buf_end));
+  buf_end[total_width] = '\0';
+}
+
+static void add_ip_addr (char *buf, struct in_addr *inp)
+{
+  char tmp[INET_ADDRSTRLEN];
+  size_t buf_len = strlen(buf);
+  char *buf_end = buf + buf_len;  
+
+  inet_ntop(AF_INET, inp, tmp, INET_ADDRSTRLEN);  
+  memset (buf_end, DEFAULT_INT, MSG_IP_SIZE);
+  char *tok = strtok(tmp, ".");
+  for (int i=0; tok; tok = strtok(NULL, "."))
+    {
+      strcpy(4*i + buf_end + 3 - strlen(tok), tok);
+      i++;
+    }
+  buf_end[3] = '.';
+  buf_end[7] = '.';
+  buf_end[11] = '.';
 }
 
 char* create_message (char* buf, enum msg_type type, ...)
@@ -105,18 +150,46 @@ char* create_message (char* buf, enum msg_type type, ...)
 
   switch (type)
     {
-      // TODO : Traiter ces cas
-    case DIFF:
-    case OLDM:    
+    case DIFF:      
+    case OLDM:
+      add_separator (ret);
+      add_int (ret, va_arg(args, int), MSG_NUM_MESS_SIZE);
+      add_separator (ret);
+      add_string (ret, va_arg(args, char*), MSG_ID_SIZE);
+      add_separator (ret);
+      add_string (ret, va_arg(args, char*), MSG_MESS_SIZE);
+      break;
+      
     case MESS:
+      add_separator (ret);
+      add_string (ret, va_arg(args, char*), MSG_ID_SIZE);
+      add_separator (ret);
+      add_string (ret, va_arg(args, char*), MSG_MESS_SIZE);
+      break;
+      
     case ITEM:
     case REGI:
+      add_separator (ret);
+      add_string (ret, va_arg(args, char*), MSG_ID_SIZE);
+      add_separator (ret);
+      add_ip_addr(ret, va_arg(args, struct in_addr*));
+      add_separator (ret);
+      add_int (ret, va_arg(args, int), MSG_NUM_MESS_SIZE);
+      add_separator (ret);
+      add_ip_addr(ret, va_arg(args, struct in_addr*));
+      add_separator (ret);
+      add_int (ret, va_arg(args, int), MSG_NUM_MESS_SIZE);
+      break;
+      
     case LAST:
+      add_separator (ret);
+      add_int (ret, va_arg(args, int), MSG_NB_MESS_SIZE);
+      break;
+      
     case LINB:      
-      if(!buf)
-	free(ret);
-      va_end (args);
-      return NULL;
+      add_separator (ret);
+      add_int (ret, va_arg(args, int), MSG_NUM_DIFF_SIZE);
+      break;
             
     default: //ACKM, ENDM, IMOK, LIST, RENO, REOK, RUOK
       break;
@@ -125,7 +198,7 @@ char* create_message (char* buf, enum msg_type type, ...)
   
   va_end (args);
 
-  set_msg_end (ret + len - MSG_END_SIZE);
+  add_msg_end (ret);
   
   return ret;
 }

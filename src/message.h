@@ -20,8 +20,10 @@
 #define MSG_END "\r\n"
 #define MSG_END_SIZE 2
 
-#define DEFAULT_CHAR '#'; 
-#define DEFAULT_INT '0';
+#define DEFAULT_CHAR '#'
+#define DEFAULT_INT '0'
+
+#define SEPARATOR_CHAR ' '
 
 // Types possibles des messages
 enum msg_type
