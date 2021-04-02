@@ -39,4 +39,6 @@ enum msg_type
     RUOK
   };
 
+enum msg_type get_msg_type(const char *phrase);
+
 #endif

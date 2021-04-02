@@ -1,0 +1,8 @@
+### C ###
+
+#Object files
+*.o
+
+
+### JAVA ###
+*.class
