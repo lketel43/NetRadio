@@ -273,11 +273,4 @@ public class Message{
 
         }
     }
-
-    public static void main(String[] args){
-        byte[] msg = createMsg("MESS RADIO hey everyone how y'all doing ?");
-        System.out.println(new String(msg));
-        System.out.println(getID(msg));
-        System.out.println(getMsg(msg));
-    }
 }
