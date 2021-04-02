@@ -7,7 +7,7 @@
 #include <stddef.h>
 #include <stdarg.h>
 
-// Taille des caractéristiques d'un message en octets
+// Taille des caracteristiques d'un message en octets
 #define MSG_ID_SIZE 8
 #define MSG_IP_SIZE 15
 #define MSG_MESS_SIZE 140
@@ -44,11 +44,30 @@ enum msg_type
     RUOK
   };
 
-
+/**
+ * Donne le taille en octet nécessaire pour stocker un message d'un certain type 
+ */
 size_t msglen (enum msg_type type);
 
+/**
+ * Donne la représentation en string d'un msg_type
+ */
 const char* msg_type_to_str (enum msg_type type);
 
+/**
+ * Crée un message avec ses caractéristiques
+ * 
+ * * ACKM, ENDM, IMOK, LIST, RENO, REOK, RUOK : Aucun argument nécessaire
+ * * LAST, LINB : int
+ * * DIFF, OLDM : int, char*, char*
+ * * MESS : char*, char*
+ * * ITEM, REGI : char*, struct in_addr*, int, struct in_addr*, int
+ *
+ * Si `buf == NULL` alors la fonction renvoit un message alloué avec un malloc
+ * Sinon le résultat est écrit dans `buf`
+ *
+ * Attention, `buf` doit être assez grand pour contenir le message + le caractère '\0'
+ */
 char* create_message (char* buf, enum msg_type type, ...);
 
 #endif
