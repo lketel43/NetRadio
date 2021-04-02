@@ -27,7 +27,7 @@ all:
 	$(MAKE) exec
 
 classes: $(CLASSES:.java=.class)
-	mv $^ src/target
+	mv src/*.class src/target
 
 exec: $(OBJ)
 	$(CC) -o $@ $^ $(FLAGS)
