@@ -41,6 +41,17 @@ public class Message{
 
     /* */
 
+    private static String removeDefChar(String str){
+        int index = 0;
+        for(int i = 0; i < str.length(); i++){
+            if(str.charAt(i) == '#'){
+                index = i; 
+                break;
+            }
+        }
+        return str.substring(0, index);
+    }
+
     public static MsgType getType(byte[] msg){
         String type = new String(java.util.Arrays.copyOfRange(msg, 0, MSG_TYPE_SIZE));
         switch(type){
@@ -66,10 +77,10 @@ public class Message{
         MsgType type = getType(msg);
         switch(type){
             case OLDM : case DIFF : 
-                return new String(java.util.Arrays.copyOfRange(msg, MSG_TYPE_SIZE + 1 + MSG_NUM_MESS_SIZE + 1,
-                                                                    MSG_TYPE_SIZE + 1 + MSG_NUM_MESS_SIZE + 1 + MSG_ID_SIZE));
+                return removeDefChar(new String(java.util.Arrays.copyOfRange(msg, MSG_TYPE_SIZE + 1 + MSG_NUM_MESS_SIZE + 1,
+                                                                    MSG_TYPE_SIZE + 1 + MSG_NUM_MESS_SIZE + 1 + MSG_ID_SIZE)));
             case MESS : case REGI : case ITEM : 
-                return new String(java.util.Arrays.copyOfRange(msg, MSG_TYPE_SIZE, MSG_TYPE_SIZE + MSG_ID_SIZE));
+                return removeDefChar(new String(java.util.Arrays.copyOfRange(msg, MSG_TYPE_SIZE + 1, MSG_TYPE_SIZE + 1 + MSG_ID_SIZE)));
             default : throw new IllegalArgumentException("Wrong message format");
         }
     }
@@ -77,10 +88,10 @@ public class Message{
     public static String getMsg(byte[] msg){
         MsgType type = getType(msg);
         switch(type){
-            case MESS : return new String(java.util.Arrays.copyOfRange(msg, MSG_TYPE_SIZE + 1 + MSG_ID_SIZE + 1,
-                                                                            MSG_TYPE_SIZE + 1 + MSG_ID_SIZE + 1 + MSG_MESS_SIZE));
-            case DIFF : case OLDM : return new String(java.util.Arrays.copyOfRange(msg, MSG_TYPE_SIZE + 1 + MSG_NUM_MESS_SIZE + 1 + MSG_ID_SIZE + 1,
-                                                                                        MSG_TYPE_SIZE + 1 + MSG_NUM_MESS_SIZE + 1 + MSG_ID_SIZE + 1 + MSG_MESS_SIZE));
+            case MESS : return removeDefChar(new String(java.util.Arrays.copyOfRange(msg, MSG_TYPE_SIZE + 1 + MSG_ID_SIZE + 1,
+                                                                            MSG_TYPE_SIZE + 1 + MSG_ID_SIZE + 1 + MSG_MESS_SIZE)));
+            case DIFF : case OLDM : return removeDefChar(new String(java.util.Arrays.copyOfRange(msg, MSG_TYPE_SIZE + 1 + MSG_NUM_MESS_SIZE + 1 + MSG_ID_SIZE + 1,
+                                                                                        MSG_TYPE_SIZE + 1 + MSG_NUM_MESS_SIZE + 1 + MSG_ID_SIZE + 1 + MSG_MESS_SIZE)));
             default : throw new IllegalArgumentException("Wrong message format");
         }
     }
@@ -261,5 +272,12 @@ public class Message{
             default : throw new IllegalArgumentException("Wrong message format");
 
         }
+    }
+
+    public static void main(String[] args){
+        byte[] msg = createMsg("MESS RADIO hey everyone how y'all doing ?");
+        System.out.println(new String(msg));
+        System.out.println(getID(msg));
+        System.out.println(getMsg(msg));
     }
 }
