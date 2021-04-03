@@ -70,4 +70,12 @@ const char* msg_type_to_str (enum msg_type type);
  */
 char* create_message (char* buf, enum msg_type type, ...);
 
+/**
+ * Donne le type de message d'un message
+ * 
+ * On entre un message en paramètre commencant par l'un des 14 types.
+*/
+enum msg_type get_msg_type(const char *phrase);
+
+
 #endif
