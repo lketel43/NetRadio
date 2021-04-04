@@ -2,10 +2,11 @@
 CC=gcc
 CFLAGS = -g -Wall
 JC=javac
+CLASSPATH=-classpath src/
 JFLAGS=
 
 %.class : %.java
-	$(JC) $*.java
+	$(JC) $(CLASSPATH) $*.java
 
 %.o : %.c
 	$(CC) -o $@ -c $< $(CFLAGS)
@@ -19,8 +20,8 @@ CFILES=\
 OBJ = $(CFILES:%.c=%.o)
 
 CLASSES=\
-		src/Broadcaster.java \
-		src/Message.java
+		src/Message.java \
+		src/Broadcaster.java
 
 all:
 	$(MAKE) classes
