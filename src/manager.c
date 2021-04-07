@@ -1,62 +1,43 @@
-#include "manager.h"
-#include "message.h"
-
-#include <arpa/inet.h>
-#include <assert.h>
+/* manager.c */
 #include <errno.h>
-#include <fcntl.h>
-#include <netdb.h>
 #include <netinet/in.h>
-#include <pthread.h>
 #include <stdio.h>
 #include <stdlib.h>
-#include <string.h>
-#include <sys/socket.h>
-#include <sys/stat.h>
-#include <sys/types.h>
-#include <unistd.h>
+
 
 #define MAX_REGISTERED_BROADCASTER 100
 #define REGI_LEN 57
 
-struct manager
+
+char registered_broadcaster[MAX_REGISTERED_BROADCASTER][REGI_LEN+1];
+
+
+int init_manager (struct sockaddr_in *address, int port)
 {
-  int sockfd;
-  struct sockaddr_in address;
-  char registered_broadcaster[MAX_REGISTERED_BROADCASTER][REGI_LEN+1];
-};
-
-
-
-struct manager* create_manager (int port)
-{
-  int r;
-  struct manager* ret = malloc (sizeof(struct manager));
-  assert(ret);
   
-
-  // address
-  ret->address.sin_family = AF_INET;
-  ret->address.sin_port = htons (port);
-  ret->address.sin_addr.s_addr = htonl(INADDR_ANY);
+  int fd, r;
 
   
   // registered_broadcaster
   for (int i=0; i < MAX_REGISTERED_BROADCASTER; i++)
-    ret->registered_broadcaster[i][0] = '\0';
+    registered_broadcaster[i][0] = '\0';
 
   
+  // address
+  address->sin_family = AF_INET;
+  address->sin_port = htons (port);
+  address->sin_addr.s_addr = htonl (INADDR_ANY);
+
   // sockfd
-  ret->sockfd = socket (PF_INET, SOCK_STREAM, 0);
-  if (ret->sockfd < 0)
+  fd = socket (PF_INET, SOCK_STREAM, 0);
+  if (fd < 0)
     {
       perror("socket");
-      free (ret);
-      return NULL;
+      return -1;
     }
 
   // On bind la socket à un port
-  r = bind(ret->sockfd, (struct sockaddr*)&ret->address, sizeof ret->address);
+  r = bind (fd, (struct sockaddr*)address, sizeof(struct sockaddr_in));
   if (r < 0)
     {
       perror("bind");
@@ -64,34 +45,29 @@ struct manager* create_manager (int port)
     }
 
   // La socket devient une socket serveur
-  r = listen(ret->sockfd, 0);
+  r = listen (fd, 0);
   if (r < 0)
     {
       perror("listen");
       goto error;
     }
   
-  return ret;
-
+  return fd;
   
  error:
-  shutdown (ret->sockfd, SHUT_RDWR);
-  free(ret);
-  return NULL;  
+  shutdown (fd, SHUT_RDWR);
+  return -1;  
 }
 
-int start_manager (struct manager* man)
+int start_manager (int serverfd)
 {
-  int serversockfd;
   struct sockaddr client_addr;
-  socklen_t client_addr_len;
-
-  serversockfd = man->sockfd;
+  socklen_t client_addr_len;  
   
   while (1)
     {
       int* clientsockfd = malloc(sizeof(int));
-      *clientsockfd = accept (serversockfd, &client_addr, &client_addr_len);
+      *clientsockfd = accept (serverfd, &client_addr, &client_addr_len);
 
       if (clientsockfd < 0)
 	{
@@ -104,15 +80,37 @@ int start_manager (struct manager* man)
       free(clientsockfd);
     }
 
-  return -1;  
+  return -1;
 }
 
-void destroy_manager(struct manager* man)
+
+int main(int argc, char **argv)
 {
-  if (!man)
-    return;
+  if (argc != 2)
+    {
+      fprintf (stderr, "Usage: %s PORT\n", argv[0]);
+      return EXIT_FAILURE;
+    }
 
-  shutdown(man->sockfd, SHUT_RDWR);
+  struct sockaddr_in address;
+  int sockfd, port, r;  
+  
+  // Port
+  port = strtol(argv[1], NULL, 10);
+  if (!port)
+    {
+      fprintf (stderr, "Error in port number\n");
+      return EXIT_FAILURE;
+    }
+  
+  sockfd = init_manager (&address, port);
+  
+  if (sockfd < 0)
+    return EXIT_FAILURE;
 
-  free(man);
+  r = start_manager (sockfd);
+  
+  shutdown(sockfd, SHUT_RDWR);
+  
+  return r;
 }

@@ -14,7 +14,6 @@ JFLAGS=
 CFILES=\
 		src/message.c \
 		src/manager.c \
-		src/main.c
 
 OBJ = $(CFILES:%.c=%.o)
 
