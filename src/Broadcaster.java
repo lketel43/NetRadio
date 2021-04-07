@@ -1,7 +1,7 @@
 import java.io.*;
 import java.net.*;
 
-public class Broadcaster{
+public class Broadcaster implements Runnable{
 
     public final static int MAX_PORT = 9999;
     public final static int MAX_NUM_MESS = 9999;
@@ -51,6 +51,10 @@ public class Broadcaster{
 
     public int getLastMess(){
         return this.lastMess;
+    }
+    
+    public void run(){
+        
     }
     
 }
