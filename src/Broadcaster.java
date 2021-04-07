@@ -14,6 +14,7 @@ public class Broadcaster{
     private int frequency;
 
     private byte[][] diff_mess = new byte[SIZE_DIFF_MESS][MAX_NUM_MESS];
+    private int lastMess = 0;
     private int current = 0;
 
     public Broadcaster(String _id, int _recvPort, String _multiCastAddr, int _multiCastPort, int _frequency){
@@ -46,6 +47,10 @@ public class Broadcaster{
 
     public int getCurrent(){
         return this.current;
+    }
+
+    public int getLastMess(){
+        return this.lastMess;
     }
     
 }
