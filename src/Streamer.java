@@ -1,7 +1,7 @@
 import java.io.*;
 import java.net.*;
 
-public class Broadcaster{
+public class Streamer{
 
     public final static int MAX_PORT = 9999;
     public final static int MAX_NUM_MESS = 9999;
@@ -17,7 +17,7 @@ public class Broadcaster{
     private int lastMess = 0;
     private int current = 0;
 
-    public Broadcaster(String _id, int _recvPort, String _multiCastAddr, int _multiCastPort, int _frequency){
+    public Streamer(String _id, int _recvPort, String _multiCastAddr, int _multiCastPort, int _frequency){
         this.id = _id;
         this. recvPort = _recvPort;
         this.multiCastAddr = _multiCastAddr;
@@ -49,8 +49,20 @@ public class Broadcaster{
         return this.current;
     }
 
+    public void setCurrent(int _current){
+        this.current = _current;
+    }
+
     public int getLastMess(){
         return this.lastMess;
+    }
+
+    public int getFrequency(){
+        return this.frequency;
+    }
+
+    public static void start(Streamer stream){
+        
     }
     
 }
