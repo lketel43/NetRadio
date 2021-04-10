@@ -106,7 +106,7 @@ public class Message{
     }
 
     public static int getNbMsg(byte[] msg){
-        if(getType(msg) == MsgType.OLDM) return Integer.parseInt(new String(java.util.Arrays.copyOfRange(msg, MSG_TYPE_SIZE + 1, MSG_TYPE_SIZE + 1 + MSG_NB_MESS)));
+        if(getType(msg) == MsgType.LAST) return Integer.parseInt(new String(java.util.Arrays.copyOfRange(msg, MSG_TYPE_SIZE + 1, MSG_TYPE_SIZE + 1 + MSG_NB_MESS)));
         throw new IllegalArgumentException("Wrong message format");
     }
 
@@ -234,7 +234,9 @@ public class Message{
             case "IMOK" : case "RUOK" : case "LIST" :
             case "RENO" : case "REOK" : case "ACKM" :
             case "ENDM" :
-                return typeToBytes(fields[0]);
+                byte[] t = typeToBytes(fields[0]);
+                byte[][] b = {t, MSG_END};
+                return createMsgFromBytes(b);
             case "REGI" : case "ITEM":
                 byte[] type = typeToBytes(fields[0]);
                 byte[] id = idToBytes(fields[1]);
