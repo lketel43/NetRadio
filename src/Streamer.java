@@ -140,8 +140,6 @@ public class Streamer{
         }
     }
 
-    //public byte[] DiffToOldm(){}
-
     public static void startStream(Streamer stream){
         MulticastService mService = new MulticastService(stream);
         Thread mThread = new Thread(mService);

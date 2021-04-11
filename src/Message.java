@@ -275,4 +275,13 @@ public class Message{
 
         }
     }
+
+    public static byte[] DiffToOldm(byte[] mess){
+        String type = "OLDM";
+        String numMess = getNumMsg(mess);
+        String id = getID(mess);
+        String msg = getMsg(mess);
+        String newMess = type + " " + numMess + " " + id + " " + msg;
+        return createMsg(newMess);
+    }
 }
