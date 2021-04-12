@@ -34,8 +34,8 @@ public class ClientService implements Runnable{
                         reader.close();
                         writer.close();
                         socket.close();
-                        break;
                     }
+                    break;
                 case MESS :
                     String num;
                     synchronized(this.stream){

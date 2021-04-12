@@ -160,7 +160,6 @@ public class Streamer{
 
     public static void main(String[] args){
         
-        byte[] msg1 = Message.createMsg("DIFF 0 RADIO Le monde est beau, je suis content j'ai rien a dire mais je veux parler quand meme nique les rageux");
         byte[] msg2 = Message.createMsg("DIFF 1 RADIO1 salut !");
         byte[] msg3 = Message.createMsg("DIFF 2 RADIO2 hello world !");
         byte[] msg4 = Message.createMsg("DIFF 3 RADIO3 baiana !");
