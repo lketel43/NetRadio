@@ -22,6 +22,8 @@ public class Streamer{
     private byte[][] lastStreamed = new byte[1000][SIZE_DIFF_MESS];
     private int lastSend = 0;
 
+    private boolean isRegistered;
+
     public void initLastStreamed(){
         for(int i = 0; i < this.lastStreamed.length; i++) this.lastStreamed[i] = null;
     }
@@ -174,6 +176,26 @@ public class Streamer{
         catch(Exception e){
             e.printStackTrace();
             return null;
+        }
+    }
+
+    public void register(String managerAddr, int managerPort){
+        try{
+            String addr = getStreamerAddress();
+            String mess = "REGI " + this.id + " " + this.multiCastAddr + " " + this.multiCastPort + " " + addr + " " + this.recvPort;
+            byte[] messB = Message.createMsg(mess);
+            Socket socket = new Socket(managerAddr, managerPort);
+            BufferedReader reader = new BufferedReader(new InputStreamReader(socket.getInputStream()));
+            PrintWriter writer = new PrintWriter(new OutputStreamWriter(socket.getOutputStream()));
+            writer.print(new String(messB));
+            writer.flush();
+            String str = reader.readLine();
+            if(str.equals("REOK")) this.isRegistered = true;
+            else if(str.equals("RENO")) this.isRegistered = false;
+            else System.out.println("ERROR");
+        }
+        catch(Exception e){
+            e.printStackTrace();
         }
     }
 
