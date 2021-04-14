@@ -1,6 +1,6 @@
 .PHONY=clean all
 CC=gcc
-CFLAGS = -g -Wall
+CFLAGS = -g -Wall -pthread
 JC=javac
 CLASSPATH=-classpath src/
 JFLAGS=
@@ -9,7 +9,7 @@ JFLAGS=
 	$(JC) $(CLASSPATH) $*.java
 
 %.o : %.c
-	$(CC) -o $@ -c $< $(CFLAGS)
+	$(CC) $(CFLAGS) -o $@ -c $< 
 
 
 CFILES=\
@@ -31,7 +31,7 @@ classes: $(CLASSES:.java=.class)
 	mv src/*.class src/target
 
 exec: $(OBJ)
-	$(CC) -o $@ $^ $(FLAGS)
+	$(CC) $(CFLAGS) -o $@ $^ 
 	mv $(OBJ) src/target
 	mv exec src/target
 
