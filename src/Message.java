@@ -42,14 +42,15 @@ public class Message{
     /* */
 
     private static String removeDefChar(String str){
-        int index = 0;
+        int index = -1;
         for(int i = 0; i < str.length(); i++){
             if(str.charAt(i) == '#'){
                 index = i; 
                 break;
             }
         }
-        return str.substring(0, index);
+        if(index == -1) return str;
+        else return str.substring(0, index);
     }
 
     public static MsgType getType(byte[] msg){
@@ -280,6 +281,7 @@ public class Message{
         String type = "OLDM";
         String numMess = getNumMsg(mess);
         String id = getID(mess);
+        System.out.println("new  = " + new String(mess));
         String msg = getMsg(mess);
         String newMess = type + " " + numMess + " " + id + " " + msg;
         return createMsg(newMess);
