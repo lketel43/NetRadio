@@ -7,6 +7,12 @@ public class ManagerService implements Runnable{
     private int portManager;
     private String addressManager;
 
+    public ManagerService(Streamer _stream, int _portManager, String _addressManager){
+        this.stream = _stream;
+        this.portManager = _portManager;
+        this.addressManager = _addressManager;
+    }
+
     public void run(){
         try{
             Socket socket = new Socket(this.addressManager, this.portManager);

@@ -22,7 +22,7 @@ public class Streamer{
     private byte[][] lastStreamed = new byte[1000][SIZE_DIFF_MESS];
     private int lastSend = 0;
 
-    private boolean isRegistered;
+    private boolean isRegistered = false;
 
     public void initLastStreamed(){
         for(int i = 0; i < this.lastStreamed.length; i++) this.lastStreamed[i] = null;
@@ -207,10 +207,15 @@ public class Streamer{
 
 
 
-    public static void startStream(Streamer stream){
+    public static void startStream(Streamer stream, String managerAddress, int managerPort){
         MulticastService mService = new MulticastService(stream);
         Thread mThread = new Thread(mService);
         mThread.start();
+        if(stream.isRegistered){
+            ManagerService manService = new ManagerService(stream, managerPort, managerAddress);
+            Thread rThread = new Thread(manService);
+            rThread.start();
+        }
         try{
             ServerSocket server = new ServerSocket(stream.recvPort);
             while(true){
@@ -230,7 +235,7 @@ public class Streamer{
         s.addMess("hellos", s.id);
         s.addMess("baiana", s.id);
         s.addMess("hellllllooooooooo wtf", s.id);
-        startStream(s);
+        startStream(s, "", -1);
         
     }
     
