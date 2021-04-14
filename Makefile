@@ -20,9 +20,10 @@ OBJ = $(CFILES:%.c=%.o)
 
 CLASSES=\
 		src/Message.java \
-		src/Streamer.java \
 		src/MulticastService.java \
-		src/ClientService.java
+		src/ClientService.java \
+		src/JavaClient.java \
+		src/Streamer.java
 
 all:
 	$(MAKE) classes

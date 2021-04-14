@@ -21,13 +21,12 @@ public class ClientService implements Runnable{
             Message.MsgType type = Message.getType(messB);
             switch(type){
                 case LAST :
-                    byte[][] last;
                     synchronized(this.stream){
-                        last = stream.getLastMess(Message.getNbMsg(messB));
-                    }
-                    for(int i = 0; i < last.length; i++){
-                        writer.print(new String(Message.DiffToOldm(last[i])));
-                        writer.flush();
+                        byte[][] last = stream.getLastMess(Message.getNbMsg(messB));
+                        for(int i = 0; i < last.length; i++){
+                            writer.print(new String(Message.DiffToOldm(last[i])));
+                            writer.flush();
+                        }
                         byte[] end = Message.createMsg("ENDM");
                         writer.print(new String(end));
                         writer.flush();
@@ -37,22 +36,21 @@ public class ClientService implements Runnable{
                         break;
                     }
                 case MESS :
-                    String num;
                     synchronized(this.stream){
-                        num = Integer.toString(this.stream.getLastMess() + 1);
+                        String num = Integer.toString(this.stream.getLastMess() + 1);
+                        String id = Message.getID(messB);
+                        String msg = Message.getMsg(messB);
+                        String newMess = "DIFF " + num + " " + id + " " + msg;
+                        byte[] newMessB = Message.createMsg(newMess);
+                        this.stream.addMess(newMessB);
+                        byte[] end2 = Message.createMsg("ACKM");
+                        writer.print(new String(end2));
+                        writer.flush();
+                        reader.close();
+                        writer.close();
+                        socket.close();
+                        break;
                     }
-                    String id = Message.getID(messB);
-                    String msg = Message.getMsg(messB);
-                    String newMess = "DIFF " + num + " " + id + " " + msg;
-                    byte[] newMessB = Message.createMsg(newMess);
-                    this.stream.addMess(newMessB);
-                    byte[] end2 = Message.createMsg("ACKM");
-                    writer.print(new String(end2));
-                    writer.flush();
-                    reader.close();
-                    writer.close();
-                    socket.close();
-                    break;
                 default : return;
             }
         }
