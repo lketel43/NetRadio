@@ -23,7 +23,8 @@ CLASSES=\
 		src/MulticastService.java \
 		src/ClientService.java \
 		src/JavaClient.java \
-		src/Streamer.java
+		src/Streamer.java \
+		src/ManagerService.java
 
 all:
 	$(MAKE) classes
