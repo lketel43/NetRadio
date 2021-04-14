@@ -37,12 +37,9 @@ public class ClientService implements Runnable{
                     }
                 case MESS :
                     synchronized(this.stream){
-                        String num = Integer.toString(this.stream.getLastMess() + 1);
                         String id = Message.getID(messB);
                         String msg = Message.getMsg(messB);
-                        String newMess = "DIFF " + num + " " + id + " " + msg;
-                        byte[] newMessB = Message.createMsg(newMess);
-                        this.stream.addMess(newMessB);
+                        this.stream.addMess(msg, id);
                         byte[] end2 = Message.createMsg("ACKM");
                         writer.print(new String(end2));
                         writer.flush();
@@ -51,7 +48,7 @@ public class ClientService implements Runnable{
                         socket.close();
                         break;
                     }
-                default : return;
+                default : System.out.println("Message incorrect");
             }
         }
         catch(Exception e){

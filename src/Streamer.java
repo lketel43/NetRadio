@@ -1,5 +1,6 @@
 import java.io.*;
 import java.net.*;
+import java.util.*;
 
 public class Streamer{
 
@@ -13,16 +14,13 @@ public class Streamer{
     private int multiCastPort;
     private int frequency;
 
-    private byte[][] diff_mess = new byte[MAX_NUM_MESS][SIZE_DIFF_MESS];
-    private int lastMess = 0;
+    private ArrayList<String> diffMess = new ArrayList<String>();
+    private ArrayList<String> IDs = new ArrayList<String>();
     private int current = 0;
+    private int num = 0;
 
     private byte[][] lastStreamed = new byte[1000][SIZE_DIFF_MESS];
-    private int currentStreamed = 0;
-
-    public void initDiffMess(){
-        for(int i = 0; i < this.diff_mess.length; i++) this.diff_mess[i] = null;
-    }
+    private int lastSend = 0;
 
     public void initLastStreamed(){
         for(int i = 0; i < this.lastStreamed.length; i++) this.lastStreamed[i] = null;
@@ -34,14 +32,14 @@ public class Streamer{
         this.multiCastAddr = _multiCastAddr;
         this.multiCastPort = _multiCastPort;
         this.frequency = _frequency;
-        this.initDiffMess();
         this.initLastStreamed();
     }
 
 
 
-
-    // Getters & setters
+    /*******************
+     *Getters & setters*
+     ******************/
 
     public String getId(){
         return this.id;
@@ -59,8 +57,8 @@ public class Streamer{
         return this.multiCastPort;
     }
 
-    public byte[][] getDiffMess(){
-        return this.diff_mess;
+    public ArrayList<String> getDiffMess(){
+        return this.diffMess;
     }
 
     public int getCurrent(){
@@ -71,28 +69,55 @@ public class Streamer{
         this.current = _current;
     }
 
-    public int getLastMess(){
-        return this.lastMess;
-    }
-
     public int getFrequency(){
         return this.frequency;
     }
 
-    public int getCurrentStreamed(){
-        return this.currentStreamed;
+    public int getLastSend(){
+        return this.lastSend;
     }
 
-    public void setCurrentStreamed(int _lastStreamed){
-        this.currentStreamed = _lastStreamed;
+    public void setLastSend(int _lastStreamed){
+        this.lastSend = _lastStreamed;
     }
 
-    // End getters & setters
+    public int getNum(){
+        return this.num;
+    }
+
+    public void setNum(int n){
+        this.num = n;
+    }
+
+    public ArrayList<String> getIDs(){
+        return this.IDs;
+    }
+
+    /***********************
+     *End getters & setters*
+     **********************/
 
 
 
 
 
+
+    /* *********************************
+     *Function to interact with clients*
+     **********************************/
+
+    public void addMess(String msg, String idMess){
+        this.diffMess.add(msg);
+        this.IDs.add(idMess);
+    }
+
+    public int getNbMess(){
+        return this.diffMess.size();
+    }
+
+    public String getMess(int index){
+        return this.diffMess.get(index);
+    }
 
     public int nbElements(byte[][] arr){
         int nb = 0;
@@ -106,17 +131,6 @@ public class Streamer{
         this.lastStreamed[index] = mess;
     }
 
-    public void addMess(byte[] mess){
-        if(this.lastMess < MAX_NUM_MESS){
-            this.diff_mess[this.lastMess] = mess;
-            this.lastMess++;
-        }
-        else if(this.lastMess == MAX_NUM_MESS){
-            this.lastMess = 0;
-            this.diff_mess[0] = mess;
-        }
-    }
-
     public byte[][] getLastMess(int nb){
         int nbEl = nbElements(this.lastStreamed);
         if(nb > nbEl){
@@ -126,19 +140,50 @@ public class Streamer{
         }
         else{
             byte[][] ret = new byte[nb][SIZE_DIFF_MESS];
-            if(nb > this.currentStreamed){
-                byte[][] arr = java.util.Arrays.copyOfRange(this.lastStreamed, 0, this.currentStreamed);
-                byte[][] arr2 = java.util.Arrays.copyOfRange(this.lastStreamed, nbEl - (nb - this.currentStreamed), nbEl);
+            if(nb > this.lastSend){
+                byte[][] arr = java.util.Arrays.copyOfRange(this.lastStreamed, 0, this.lastSend);
+                byte[][] arr2 = java.util.Arrays.copyOfRange(this.lastStreamed, nbEl - (nb - this.lastSend), nbEl);
                 for(int i = 0; i < arr2.length; i++) ret[i] = arr2[i];
                 for(int i = arr2.length; i < arr.length; i++) ret[i] = arr[i];
                 return ret;
             }
             else{
-                for(int i = this.currentStreamed - nb; i < this.currentStreamed; i++) ret[i - (this.currentStreamed - nb)] = this.lastStreamed[i];
+                for(int i = this.lastSend - nb; i < this.lastSend; i++) ret[i - (this.lastSend - nb)] = this.lastStreamed[i];
                 return ret;
             }
         }
     }
+
+    /*************************************** 
+     *End functions to interact with client*
+     **************************************/
+
+
+
+
+
+    /************************************
+     *Functions to interact with manager*
+     ***********************************/
+
+    public static String getStreamerAddress(){
+        try{
+            InetAddress myIA=InetAddress.getLocalHost();
+            return myIA.getHostAddress();
+        } 
+        catch(Exception e){
+            e.printStackTrace();
+            return null;
+        }
+    }
+
+    /***************************************
+    *End functions to interact with manager*
+    ***************************************/
+
+
+
+
 
     public static void startStream(Streamer stream){
         MulticastService mService = new MulticastService(stream);
@@ -159,16 +204,12 @@ public class Streamer{
     }
 
     public static void main(String[] args){
-        
-        byte[] msg2 = Message.createMsg("DIFF 1 RADIO1 salut !");
-        byte[] msg3 = Message.createMsg("DIFF 2 RADIO2 hello world !");
-        byte[] msg4 = Message.createMsg("DIFF 3 RADIO3 baiana !");
         Streamer s = new Streamer("streamer", 4242, "225.0.0.0", 5001, 1000);
-        s.addMess(msg2);
-        s.addMess(msg3);
-        s.addMess(msg4);
+        s.addMess("hellos", s.id);
+        s.addMess("baiana", s.id);
+        s.addMess("hellllllooooooooo wtf", s.id);
         startStream(s);
-        //System.out.println(s.diff_mess.length);
+        
     }
     
 }

@@ -14,25 +14,26 @@ public class MulticastService implements Runnable{
         try{
             DatagramSocket dataSocket = new DatagramSocket();
             while(true){
-                byte[] data;
+                byte[] messB;
                 synchronized(this.stream){
-                    int current = stream.getCurrent();
-                    int cs = stream.getCurrentStreamed();
-                    data = stream.getDiffMess()[current];
-                    if(current == Streamer.MAX_NUM_MESS - 1) stream.setCurrent(0);
-                    else if(stream.getDiffMess()[current + 1] == null) stream.setCurrent(0);
-                    else stream.setCurrent(current + 1);
-                    if(cs == 1000){
-                        stream.setCurrentStreamed(0);
-                        stream.addLast(data, 0);
-                    }
-                    else if(cs < 1000){
-                        stream.addLast(data, cs);
-                        stream.setCurrentStreamed(cs + 1);
-                    }
+                    int nbStreamedMess = this.stream.getNbMess();
+                    int current = this.stream.getCurrent();
+                    int num = this.stream.getNum();
+                    String data = this.stream.getMess(current);
+                    String mess = "DIFF " + Integer.toString(num) + " " + this.stream.getIDs().get(current) + " " + data;
+                    messB = Message.createMsg(mess);
+                    if(num + 1 == Streamer.MAX_NUM_MESS) this.stream.setNum(0);
+                    else if(num + 1 < Streamer.MAX_NUM_MESS) this.stream.setNum(num + 1);
+                    if(current + 1 == nbStreamedMess) this.stream.setCurrent(0);
+                    else if (current + 1 < nbStreamedMess) this.stream.setCurrent(current + 1);
+                    
+                    int lastSend = this.stream.getLastSend();
+                    this.stream.addLast(messB, lastSend);
+                    if(lastSend + 1 == 1000) this.stream.setLastSend(0);
+                    else if(lastSend + 1 < 1000) this.stream.setLastSend(lastSend + 1);
                 }
                 InetSocketAddress inetSocket = new InetSocketAddress(stream.getMultiCastAddr(), stream.getMultiCastPort());
-                DatagramPacket packet = new DatagramPacket(data, data.length, inetSocket);
+                DatagramPacket packet = new DatagramPacket(messB, messB.length, inetSocket);
                 dataSocket.send(packet);
                 Thread.sleep(stream.getFrequency());
             }
