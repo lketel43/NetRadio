@@ -46,20 +46,21 @@ int start_manager (int serverfd);
 char *register_broadcaster (const char *regi_msg)
 {
   char *ret = NULL;
+
+  pthread_mutex_lock (&register_mutex);
   
-  for (int i=0; i < MAX_REGISTERED_BROADCASTER && !ret; i++)
-    {      
-      pthread_mutex_lock (&register_mutex);
-      
+  for (int i=0; i < MAX_REGISTERED_BROADCASTER; i++)
+    {                  
       if (broadcaster_register[i][0] == '\0')
 	{
 	  ret = broadcaster_register[i];
 	  strcpy (ret, regi_msg);
 	  strncpy (ret, msg_type_to_str(ITEM), MSG_TYPE_SIZE);
-	}
-      
-      pthread_mutex_unlock (&register_mutex);
+	  break;
+	}    
     }
+
+  pthread_mutex_unlock (&register_mutex);
   
   return ret;
 }
@@ -106,8 +107,10 @@ int monitor_broadcaster (int broadcasterfd, char *canary)
 	}
     }
 
+  pthread_mutex_lock (&register_mutex);
   *canary = '\0';
-
+  pthread_mutex_unlock (&register_mutex);
+  
   return -1;
 }
 
@@ -143,20 +146,18 @@ int handle_broadcaster (int broadcasterfd, const char *regi_msg)
 int copy_broadcaster_register (char buffer[MAX_REGISTERED_BROADCASTER][REGI_LEN+1])
 {
   int size = 0;
-  
+
+  pthread_mutex_lock (&register_mutex);
   for (int i=0, j=0; i < MAX_REGISTERED_BROADCASTER; i++)
     {      
-      pthread_mutex_lock (&register_mutex);
-      
       if (broadcaster_register[i][0] != '\0')
 	{	  
 	  memmove (buffer[j], broadcaster_register[i], REGI_LEN + 1);
 	  size++;
 	  j++;
-	}
-      
-      pthread_mutex_unlock (&register_mutex);
+	}      
     }
+  pthread_mutex_unlock (&register_mutex);
 
   return size;
 }
