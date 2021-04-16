@@ -25,6 +25,10 @@
 
 #define SEPARATOR_CHAR ' '
 
+// Taille des messages
+#define REGI_LEN 57
+#define LIST_LEN 6
+
 // Types possibles des messages
 enum msg_type
   {
