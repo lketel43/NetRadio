@@ -235,7 +235,8 @@ public class Streamer{
         s.addMess("hellos", s.id);
         s.addMess("baiana", s.id);
         s.addMess("hellllllooooooooo wtf", s.id);
-        startStream(s, "", -1);
+        s.register("localhost", 4343);
+        startStream(s, "localhost", 4343);
         
     }
     
