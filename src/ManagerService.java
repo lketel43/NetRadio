@@ -24,7 +24,6 @@ public class ManagerService implements Runnable{
             writer.print(new String(messB));
             writer.flush();
             String str = reader.readLine();
-            //System.out.println(str);
             if(str.equals("REOK")){
 
                 String sendMsg = new String(Message.createMsg("IMOK"));
