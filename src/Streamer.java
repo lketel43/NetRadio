@@ -190,6 +190,7 @@ public class Streamer{
             writer.print(new String(messB));
             writer.flush();
             String str = reader.readLine();
+            System.out.println(str);
             if(str.equals("REOK")) this.isRegistered = true;
             else if(str.equals("RENO")) this.isRegistered = false;
             else System.out.println("ERROR");
