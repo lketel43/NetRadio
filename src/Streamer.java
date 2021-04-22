@@ -179,27 +179,6 @@ public class Streamer{
         }
     }
 
-    public void register(String managerAddr, int managerPort){
-        try{
-            String addr = getStreamerAddress();
-            String mess = "REGI " + this.id + " " + this.multiCastAddr + " " + this.multiCastPort + " " + addr + " " + this.recvPort;
-            byte[] messB = Message.createMsg(mess);
-            Socket socket = new Socket(managerAddr, managerPort);
-            BufferedReader reader = new BufferedReader(new InputStreamReader(socket.getInputStream()));
-            PrintWriter writer = new PrintWriter(new OutputStreamWriter(socket.getOutputStream()));
-            writer.print(new String(messB));
-            writer.flush();
-            String str = reader.readLine();
-            System.out.println(str);
-            if(str.equals("REOK")) this.isRegistered = true;
-            else if(str.equals("RENO")) this.isRegistered = false;
-            else System.out.println("ERROR");
-        }
-        catch(Exception e){
-            e.printStackTrace();
-        }
-    }
-
     /***************************************
     *End functions to interact with manager*
     ***************************************/
@@ -212,11 +191,9 @@ public class Streamer{
         MulticastService mService = new MulticastService(stream);
         Thread mThread = new Thread(mService);
         mThread.start();
-        if(stream.isRegistered){
-            ManagerService manService = new ManagerService(stream, managerPort, managerAddress);
-            Thread rThread = new Thread(manService);
-            rThread.start();
-        }
+        ManagerService manService = new ManagerService(stream, managerPort, managerAddress);
+        Thread rThread = new Thread(manService);
+        rThread.start();
         try{
             ServerSocket server = new ServerSocket(stream.recvPort);
             while(true){
@@ -236,7 +213,6 @@ public class Streamer{
         s.addMess("hellos", s.id);
         s.addMess("baiana", s.id);
         s.addMess("hellllllooooooooo wtf", s.id);
-        s.register("localhost", 4343);
         startStream(s, "localhost", 4343);
         
     }
