@@ -1,37 +1,56 @@
 /* manager.c */
 
 #include "message.h"
+#include "utils.h"
 
+#include <ctype.h>
 #include <netinet/in.h>
 #include <pthread.h>
+#include <stdbool.h>
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
 #include <unistd.h>
 
-
-#define MAX_REGISTERED_BROADCASTER 100
 #define BUFSIZE 512
-/* Délai en secondes pour tester la présence d'un diffuseur */
-#define CHECK_DELAY 47
+
 #define TIMEOUT_SEC 2
 #define TIMEOUT_USEC 0
 
+/* Nombre maximale de diffuseur que le gestionnaire peut gérer */
+#define MAX_REGISTERED_BROADCASTER 100
+
+/* Délai en secondes pour tester la présence d'un diffuseur */
+#define CHECK_DELAY 47
+
 
 /* Registre des diffuseurs */
-char broadcaster_register[MAX_REGISTERED_BROADCASTER][REGI_LEN+1];
-pthread_mutex_t register_mutex = PTHREAD_MUTEX_INITIALIZER;
+static char broadcaster_register[MAX_REGISTERED_BROADCASTER][REGI_LEN+1];
+
+/* Mutex pour accéder au registre des diffuseurs */
+static pthread_mutex_t register_mutex = PTHREAD_MUTEX_INITIALIZER;
 
 
-char *register_broadcaster (const char *regi_msg);
-int monitor_broadcaster (int broadcasterfd, char *canary);
-int handle_broadcaster (int broadcasterfd, const char *msg);
-int copy_broadcaster_register (char buffer[MAX_REGISTERED_BROADCASTER][REGI_LEN+1]);
-int handle_user (int usersockfd);
-void* handle_connection (void *arg);
-int init_manager (struct sockaddr_in *address, int port);
-int start_manager (int serverfd);
+/* Si TRUE alors on explique les opérations */
+static bool verbose;
 
+/* Options supportées :
+ * 
+ * -v 
+ *    verbose, explique ce qu'il se passe
+ */
+static const char* options = "v";
+
+
+static void verbose_print_message (const char *intro, const char *msg)
+{
+  if (verbose)
+    {
+      printf("%s", intro);
+      print_raw_string(msg);
+      printf("\n");
+    }
+}
 
 /*
  * Enregistre un broadcaster
@@ -43,13 +62,14 @@ int start_manager (int serverfd);
  *  
  * ! THREAD-SAFE : mutex_lock !
  */
-char *register_broadcaster (const char *regi_msg)
+static char *register_broadcaster (const char *regi_msg)
 {
   char *ret = NULL;
-
+  int i;
+  
   pthread_mutex_lock (&register_mutex);
   
-  for (int i=0; i < MAX_REGISTERED_BROADCASTER; i++)
+  for (i=0; i < MAX_REGISTERED_BROADCASTER; i++)
     {                  
       if (broadcaster_register[i][0] == '\0')
 	{
@@ -61,6 +81,14 @@ char *register_broadcaster (const char *regi_msg)
     }
 
   pthread_mutex_unlock (&register_mutex);
+
+  if (verbose)
+    {
+      if (ret)
+	printf("Enregistrement à la place n°%d\n", i);
+      else
+	printf("Plus de place disponible\n");
+    }
   
   return ret;
 }
@@ -70,7 +98,7 @@ char *register_broadcaster (const char *regi_msg)
  *
  * On change la valeur de CANARY si le diffuseur est inaccessible
  */
-int monitor_broadcaster (int broadcasterfd, char *canary)
+static int monitor_broadcaster (int broadcasterfd, char *canary)
 {
   char msg_buf[BUFSIZE];
   struct timeval timeout;
@@ -90,19 +118,35 @@ int monitor_broadcaster (int broadcasterfd, char *canary)
   while (!quit)
     {
       create_message (msg_buf, RUOK);
+      verbose_print_message ("Message envoyé : ", msg_buf);
       send (broadcasterfd, msg_buf, msglen(RUOK), 0);
 
+      if (verbose)
+	printf("On attend %ds\n", CHECK_DELAY);
+      
       sleep (CHECK_DELAY);
       
       r = recv(broadcasterfd, msg_buf, BUFSIZE, 0);
-      if (r < 0 || r != msglen(IMOK))
-	break;
-	
+      if (r < 0)
+	{
+	  perror ("recv");
+	  break;
+	}
+      else if (r == 0)
+	{
+	  if (verbose)
+	    printf("Le gestionnaire s'est déconnecté\n");
+	  break;
+	}
+
+      verbose_print_message ("Message recu : ", msg_buf);
+      
       switch(get_msg_type(msg_buf))
 	{
 	case IMOK:
 	  break;
 	default:
+	  fprintf(stderr, "Wrong message type\n");
 	  quit = 1;
 	}
     }
@@ -117,7 +161,7 @@ int monitor_broadcaster (int broadcasterfd, char *canary)
 /*
  * Gère la demande d'un diffuseur
  */
-int handle_broadcaster (int broadcasterfd, const char *regi_msg)
+static int handle_broadcaster (int broadcasterfd, const char *regi_msg)
 {
   char *canary;
   char msg_buf[BUFSIZE];
@@ -127,11 +171,18 @@ int handle_broadcaster (int broadcasterfd, const char *regi_msg)
   if (!canary) // NULL
     {
       create_message (msg_buf, RENO);
+      
+      verbose_print_message ("Message envoyé : ", msg_buf);
+
       send (broadcasterfd, msg_buf, msglen(RENO), 0);
       return 0;
     }
 
+  
   create_message (msg_buf, REOK);
+
+  verbose_print_message ("Message envoyé : ", msg_buf);
+  
   send (broadcasterfd, msg_buf, msglen(REOK), 0);
   
   return monitor_broadcaster (broadcasterfd, canary);
@@ -165,7 +216,7 @@ int copy_broadcaster_register (char buffer[MAX_REGISTERED_BROADCASTER][REGI_LEN+
 /*
  * Gère la demande d'un utilisateur
  */
-int handle_user (int usersockfd)
+static int handle_user (int usersockfd)
 {
   char msg_buf[BUFSIZE];
   char registered_broadcaster[MAX_REGISTERED_BROADCASTER][REGI_LEN+1];
@@ -178,6 +229,9 @@ int handle_user (int usersockfd)
    * entre 0 et 99 précisant le nombre de messages de type ITEM qu’on va envoyer
    */
   create_message (msg_buf, LINB, nb);
+
+  verbose_print_message ("Message envoyé : ", msg_buf);  
+  
   send (usersockfd, msg_buf, msglen(LINB), 0);
 
   
@@ -187,7 +241,8 @@ int handle_user (int usersockfd)
    * similaires à celles contenues dans les messages de type REGI
    */
   for (int i = 0; i < nb; i++)
-    {     
+    {
+      verbose_print_message ("Message envoyé : ", registered_broadcaster[i]);
       send (usersockfd, registered_broadcaster[i], msglen(ITEM), 0);
     }
   
@@ -198,7 +253,7 @@ int handle_user (int usersockfd)
 /*
  * Routine utilisée pour la création des threads
  */
-void* handle_connection (void *arg)
+static void* handle_connection (void *arg)
 {
   int clientsockfd, r;
   char msg_buf[BUFSIZE];
@@ -207,17 +262,25 @@ void* handle_connection (void *arg)
   
   clientsockfd = *(int*)arg;
   
-  r = recv(clientsockfd, msg_buf, BUFSIZE, 0);
-  if (!r)
-    {
-      goto quit;
-    }
-  else if (r < 0)
+  r = recv(clientsockfd, msg_buf, BUFSIZE - 1, 0);
+  if (r < 0)
     {
       perror ("recv");
       goto quit;
     }
-  else if (r != REGI_LEN && r != LIST_LEN)
+  else if (r == 0)
+    {
+      if (verbose)
+	printf("Le client s'est déconnecté sans envoyer de message\n");
+      
+      goto quit;
+    }
+
+  msg_buf[r] = '\0';
+
+  verbose_print_message ("Message recu : ", msg_buf);
+  
+  if (r != REGI_LEN && r != LIST_LEN)
     {
       fprintf(stderr, "Wrong message format\n");
       goto quit;
@@ -249,16 +312,14 @@ void* handle_connection (void *arg)
 /*
  * Initialise le manager
  *
- * * BROADCASTER_REGISTER est réinitialisée
+ * * BROADCASTER_REGISTER est initialisée
  * * ADDRESS est remplit à l'aide de PORT
  * 
  * Renvoit une socket bind'ée et listen'ée; -1 si erreur
  */ 
-int init_manager (struct sockaddr_in *address, int port)
-{
-  
+static int init_manager (struct sockaddr_in *address, int port)
+{  
   int fd, r;
-
   
   // broadcaster_register
   for (int i=0; i < MAX_REGISTERED_BROADCASTER; i++)
@@ -307,13 +368,13 @@ int init_manager (struct sockaddr_in *address, int port)
  *
  * Le manager est threadé
  */
-int start_manager (int serverfd)
-{
-  struct sockaddr client_addr;
-  socklen_t client_addr_len;  
-  
+static int start_manager (int serverfd)
+{    
   while (1)
     {
+      struct sockaddr client_addr;
+      socklen_t client_addr_len;
+      
       int* clientsockfd = malloc (sizeof(int));
       *clientsockfd = accept (serverfd, &client_addr, &client_addr_len);
 
@@ -324,6 +385,12 @@ int start_manager (int serverfd)
 	  continue;
 	}
 
+      if (verbose)
+	{
+	  printf ("Nouvelle connexion établie\n");
+	  print_sockaddr_in_info ((struct sockaddr_in*)&client_addr);
+	}
+      
       pthread_t thread;
       if (pthread_create (&thread, NULL, handle_connection, clientsockfd) != 0)
 	{
@@ -337,22 +404,48 @@ int start_manager (int serverfd)
 }
 
 
-int main(int argc, char **argv)
+int main (int argc, char **argv)
 {
-  if (argc != 2)
+  struct sockaddr_in address;
+  int sockfd, port, r;
+  int opt;
+
+  
+  opterr = 0;
+    
+  /* On décode les options */
+  verbose = false;
+  
+  while ((opt = getopt(argc, argv, options)) != -1)
     {
-      fprintf (stderr, "Usage: %s PORT\n", argv[0]);
-      return EXIT_FAILURE;
+      switch (opt)
+	{
+	case 'v':
+	  verbose = true;
+	  break;
+	case '?':
+	  if (isprint (optopt))
+	    fprintf (stderr, "option invalide -- '%c'\n", optopt);
+	  else
+	    fprintf (stderr, "caractère non reconnu -- '\\x%x'\n", optopt);
+	  return EXIT_FAILURE;
+	default:
+	  abort();
+	}
     }
 
-  struct sockaddr_in address;
-  int sockfd, port, r;  
+  if (optind != argc - 1)
+    {
+      fprintf (stderr, "Usage: %s [OPTION]... PORT\n", argv[0]);
+      return EXIT_FAILURE;
+    }
+  
   
   // Port
-  port = strtol(argv[1], NULL, 10);
+  port = strtol(argv[optind], NULL, 10);
   if (port <= 0)
     {
-      fprintf (stderr, "Error in port number\n");
+      fprintf (stderr, "Erreur dans le port\n");
       return EXIT_FAILURE;
     }
   
@@ -361,6 +454,9 @@ int main(int argc, char **argv)
   if (sockfd < 0)
     return EXIT_FAILURE;
 
+  if (verbose)
+    printf ("Lancement du gestionnaire sur le port : %d\n", port);
+  
   r = start_manager (sockfd);
   
   shutdown(sockfd, SHUT_RDWR);
