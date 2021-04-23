@@ -207,14 +207,5 @@ public class Streamer{
             e.printStackTrace();
         }
     }
-
-    public static void main(String[] args){
-        Streamer s = new Streamer("streamer", 4242, "225.0.0.0", 5001, 1000);
-        s.addMess("hellos", s.id);
-        s.addMess("baiana", s.id);
-        s.addMess("hellllllooooooooo wtf", s.id);
-        startStream(s, "localhost", 4343);
-        
-    }
     
 }
