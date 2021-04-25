@@ -191,7 +191,7 @@ public class Streamer{
         MulticastService mService = new MulticastService(stream);
         Thread mThread = new Thread(mService);
         mThread.start();
-        if(managerAddress == null && managerPort != -1){
+        if(managerAddress != null && managerPort != -1){
             ManagerService manService = new ManagerService(stream, managerPort, managerAddress);
             Thread rThread = new Thread(manService);
             rThread.start();
