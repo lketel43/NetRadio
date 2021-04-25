@@ -126,10 +126,14 @@ static int monitor_broadcaster (int broadcasterfd, char *canary)
       // 2 - SEND RUOK
       create_message (msg_buf, RUOK);
       verbose_print_message ("Message envoyé : ", msg_buf);
-      r = send (broadcasterfd, msg_buf, msglen(RUOK), 0);
+      r = send (broadcasterfd, msg_buf, msglen(RUOK), MSG_NOSIGNAL);
       if (r < 0)
 	{
-	  perror ("monitor_broadcaster: send");
+	  if (errno == EPIPE)
+	    verbose_print_message ("Le diffuseur s'est deconnecté", "");
+	  else
+	    perror ("monitor_broadcaster: send");
+	  
 	  goto error;
 	}
       
@@ -138,7 +142,7 @@ static int monitor_broadcaster (int broadcasterfd, char *canary)
       if (r < 0)
 	{
 	  if (errno == EAGAIN)
-	    verbose_print_message("Délai d'attente dépassé", "\n");
+	    verbose_print_message("Délai d'attente dépassé", "");
 	  else
 	    perror ("monitor_broadcaster: recv");
 	  
