@@ -17,6 +17,7 @@ Il y a deux manières de lancer un diffuseur. Soit par ligne de commande, soit p
     * Ce diffuseur ne se connectera à aucun gestionnaire
 * ``java Streamer`` avec cinq options: l'id du diffuseur, son port de réception, son addresse de multicast, son port de multicast, sa fréquence d'envoi (exemple: ``java Streamer myStream 4242 225.0.0.0 5001 5000``).
 * ``java Streamer``avec sept options: les mêmes que précedemment plus une adresse sur laquelle tourne un gestionnaire et son port de réception (exemple: ``java Streamer myStream 4242 225.0.0.0 5001 5000 localhost 4343``).
+
 Des messages par défaut sont diffusés par le diffuseur créé.
 
 Pour lancer un diffuseur grâce à des fichiers faire ``java Streamer file1 file2``où ``file1`` est une fichier contenant des informations sur le diffuseur. Son format doit être le suivant:
