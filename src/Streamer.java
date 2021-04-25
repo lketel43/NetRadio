@@ -191,9 +191,11 @@ public class Streamer{
         MulticastService mService = new MulticastService(stream);
         Thread mThread = new Thread(mService);
         mThread.start();
-        ManagerService manService = new ManagerService(stream, managerPort, managerAddress);
-        Thread rThread = new Thread(manService);
-        rThread.start();
+        if(managerAddress == null && managerPort != -1){
+            ManagerService manService = new ManagerService(stream, managerPort, managerAddress);
+            Thread rThread = new Thread(manService);
+            rThread.start();
+        }
         try{
             ServerSocket server = new ServerSocket(stream.recvPort);
             while(true){
@@ -205,6 +207,43 @@ public class Streamer{
         }
         catch(Exception e){
             e.printStackTrace();
+        }
+    }
+
+    public static void main(String[] args){
+        if(args.length == 0){
+            int defRecvPort = 4242;
+            String defAddr = "225.0.0.0";
+            String defID = "STREAMER";
+            int defFrequency = 1000;
+            int defMultiPort = 5001;
+            Streamer s = new Streamer(defID, defRecvPort, defAddr, defMultiPort, defFrequency);
+            s.addMess("first message", defID);
+            s.addMess("second message", defID);
+            s.addMess("third message", defID);
+            s.addMess("forth message", defID);
+            startStream(s, null, -1);
+        }
+        else if(args.length == 5){
+            Streamer s = new Streamer(args[0], Integer.parseInt(args[1]), args[2], Integer.parseInt(args[3]), Integer.parseInt(args[4]));
+            s.addMess("first message", args[0]);
+            s.addMess("second message", args[0]);
+            s.addMess("third message", args[0]);
+            s.addMess("forth message", args[0]);
+            startStream(s, null, -1);
+        }
+        else if(args.length == 7){
+            Streamer s = new Streamer(args[0], Integer.parseInt(args[1]), args[2], Integer.parseInt(args[3]), Integer.parseInt(args[4]));
+            s.addMess("first message", args[0]);
+            s.addMess("second message", args[0]);
+            s.addMess("third message", args[0]);
+            s.addMess("forth message", args[0]);
+            startStream(s, args[5], Integer.parseInt(args[6]));
+        }
+        else if(args.length == 2){
+            Streamer s = StreamFile.initStreamerFromFile(args[0]);
+            StreamFile.addMessFromFile(s, args[1]);
+            startStream(s, null, -1);
         }
     }
     
