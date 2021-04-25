@@ -12,6 +12,8 @@
 #include <string.h>
 #include <unistd.h>
 
+#include <errno.h>
+
 #define BUFSIZE 512
 
 #define TIMEOUT_SEC 2
@@ -21,7 +23,7 @@
 #define MAX_REGISTERED_BROADCASTER 100
 
 /* Délai en secondes pour tester la présence d'un diffuseur */
-#define CHECK_DELAY 47
+#define CHECK_DELAY 5
 
 
 /* Registre des diffuseurs */
@@ -102,41 +104,52 @@ static int monitor_broadcaster (int broadcasterfd, char *canary)
 {
   char msg_buf[BUFSIZE];
   struct timeval timeout;
-  int r, quit;
+  int r;
   
   timeout.tv_sec = TIMEOUT_SEC;
   timeout.tv_usec = TIMEOUT_USEC;
   
   if (setsockopt (broadcasterfd, SOL_SOCKET, SO_RCVTIMEO, &timeout, sizeof timeout) < 0)
     {
-      perror ("setsockopt");
-      return -1;
+      perror ("monitor_broadcaster: setsockopt");
+      goto error;
     }
   
-  quit = 0;
   
-  while (!quit)
+  while (1)
     {
-      create_message (msg_buf, RUOK);
-      verbose_print_message ("Message envoyé : ", msg_buf);
-      send (broadcasterfd, msg_buf, msglen(RUOK), 0);
-
+      // 1 - SLEEP
       if (verbose)
 	printf("On attend %ds\n", CHECK_DELAY);
-      
       sleep (CHECK_DELAY);
+
+      // 2 - SEND RUOK
+      create_message (msg_buf, RUOK);
+      verbose_print_message ("Message envoyé : ", msg_buf);
+      r = send (broadcasterfd, msg_buf, msglen(RUOK), 0);
+      if (r < 0)
+	{
+	  perror ("monitor_broadcaster: send");
+	  goto error;
+	}
       
+      // 3 - RECV IMOK
       r = recv(broadcasterfd, msg_buf, BUFSIZE, 0);
       if (r < 0)
 	{
-	  perror ("recv");
-	  break;
+	  if (errno == EAGAIN)
+	    verbose_print_message("Délai d'attente dépassé", "\n");
+	  else
+	    perror ("monitor_broadcaster: recv");
+	  
+	  goto error;
 	}
       else if (r == 0)
 	{
 	  if (verbose)
 	    printf("Le gestionnaire s'est déconnecté\n");
-	  break;
+	  
+	  goto error;
 	}
 
       verbose_print_message ("Message recu : ", msg_buf);
@@ -147,10 +160,11 @@ static int monitor_broadcaster (int broadcasterfd, char *canary)
 	  break;
 	default:
 	  fprintf(stderr, "Wrong message type\n");
-	  quit = 1;
+	  goto error;
 	}
     }
-
+  
+ error:
   pthread_mutex_lock (&register_mutex);
   *canary = '\0';
   pthread_mutex_unlock (&register_mutex);
