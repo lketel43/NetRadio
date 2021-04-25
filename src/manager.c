@@ -3,6 +3,7 @@
 #include "message.h"
 #include "utils.h"
 
+#include <assert.h>
 #include <ctype.h>
 #include <netinet/in.h>
 #include <pthread.h>
@@ -387,14 +388,19 @@ static int init_manager (struct sockaddr_in *address, int port)
  * Le manager est threadé
  */
 static int start_manager (int serverfd)
-{    
+{
+  struct sockaddr_in client_addr;
+  socklen_t client_addr_len = sizeof(client_addr);
   while (1)
-    {
-      struct sockaddr client_addr;
-      socklen_t client_addr_len;
-      
+    {      
       int* clientsockfd = malloc (sizeof(int));
-      *clientsockfd = accept (serverfd, &client_addr, &client_addr_len);
+      if (!clientsockfd)
+	{
+	  perror ("start_manager: malloc");
+	  exit(EXIT_FAILURE);
+	}
+      
+      *clientsockfd = accept (serverfd, (struct sockaddr *)&client_addr, &client_addr_len);
 
       if (clientsockfd < 0)
 	{
@@ -406,7 +412,7 @@ static int start_manager (int serverfd)
       if (verbose)
 	{
 	  printf ("Nouvelle connexion établie\n");
-	  print_sockaddr_in_info ((struct sockaddr_in*)&client_addr);
+	  print_sockaddr_in_info (&client_addr);
 	}
       
       pthread_t thread;
