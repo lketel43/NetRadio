@@ -281,7 +281,6 @@ public class Message{
         String type = "OLDM";
         String numMess = getNumMsg(mess);
         String id = getID(mess);
-        System.out.println("new  = " + new String(mess));
         String msg = getMsg(mess);
         String newMess = type + " " + numMess + " " + id + " " + msg;
         return createMsg(newMess);
