@@ -18,7 +18,19 @@ CFILES=\
 		src/utils.c \
 		src/client.c
 
-OBJ = $(CFILES:%.c=%.o)
+CCLIENT=\
+		src/message.c \
+		src/utils.c \
+		src/client.c
+
+CMANAGER=\
+		src/message.c \
+		src/manager.c \
+		src/utils.c
+
+OBJMANAGER = $(CMANAGER:%.c=%.o)
+
+OBJCLIENT = $(CCLIENT:%.c=%.o)
 
 CLASSES=\
 		src/Message.java \
@@ -30,15 +42,21 @@ CLASSES=\
 
 all:
 	$(MAKE) classes
-	$(MAKE) exec
+	$(MAKE) manager
+	$(MAKE) clientc
 
 classes: $(CLASSES:.java=.class)
 	mv src/*.class src/target
 
-exec: $(OBJ)
+manager: $(OBJMANAGER)
 	$(CC) $(CFLAGS) -o $@ $^ 
-	mv $(OBJ) src/target
-	mv exec src/target
+	mv $(OBJMANAGER) src/target
+	mv manager src/target
+
+clientc: $(OBJCLIENT)
+	$(CC) $(CFLAGS) -o $@ $^
+	mv $(OBJCLIENT) src/target
+	mv clientc src/target
 
 clean:
-	rm src/target/*.o src/target/*.class src/target/exec
+	rm src/target/*.o src/target/*.class src/target/manager src/target/clientc
