@@ -11,15 +11,16 @@
 
 #define BUFSIZE 512
 
-
+/*
 int handle_connection_with_manager(struct sockaddr_in *adr_sock, int *sock, int port, char *adress){
     adr_sock->sin_family = AF_INET;
     adr_sock->sin_port = htons(port);
-    if(inet_aton(adress, &adr_sock->sin_addr) == 0){
+    inet_aton(adress, &adr_sock->sin_addr);*/
+    /*if(inet_aton(adress, &adr_sock->sin_addr) == 0){
         printf("Adress unvalid...\n");
         return EXIT_FAILURE;
-    }
-
+    }*/
+/*
     *sock = socket(PF_INET, SOCK_STREAM, 0);
     if(*sock == -1){
         printf("Erreur lors de la création de la socket...\n");
@@ -32,19 +33,38 @@ int handle_connection_with_manager(struct sockaddr_in *adr_sock, int *sock, int 
         return EXIT_FAILURE;
     }
     return 1;
-}
+}*/
 
 
 int interact_with_manager(char *adress, int port){
     struct sockaddr_in adr_sock;
-    int sock, r;
-    if(handle_connection_with_manager(&adr_sock, &sock, port, adress)!=1){
+    int sock;
+    /*if(handle_connection_with_manager(&adr_sock, &sock, port, adress)!=1){
         printf("Problem of connection\n");
+        return EXIT_FAILURE;
+    }*/
+    adr_sock.sin_family = AF_INET;
+    adr_sock.sin_port = htons(port);
+    inet_aton(adress, &adr_sock.sin_addr);
+    /*if(inet_aton(adress, &adr_sock->sin_addr) == 0){
+        printf("Adress unvalid...\n");
+        return EXIT_FAILURE;
+    }*/
+
+    sock = socket(PF_INET, SOCK_STREAM, 0);
+    if(sock == -1){
+        printf("Erreur lors de la création de la socket...\n");
         return EXIT_FAILURE;
     }
 
-    char *mess = malloc(10);
-    create_message(mess, LIST);
+    int r = connect(sock, (struct sockaddr *)&adr_sock, sizeof(struct sockaddr_in));
+    if(r == -1){
+        printf("Erreur connect\n");
+        return EXIT_FAILURE;
+    }
+
+    char *mess = "LIST\t\n"/*malloc(10)*/;
+    //create_message(mess, LIST);
     send(sock, mess, strlen(mess), 0);
     printf("YOU : %s\n", mess);
 
@@ -55,19 +75,20 @@ int interact_with_manager(char *adress, int port){
         return EXIT_FAILURE;
     }
     buf[r] = '\0';
-
+    printf("%s\n", buf);
     enum msg_type type = get_msg_type(buf);
+    printf("%d\n", type);
     int num_diff;
     char numdi[3];
-    switch(type){
-        case LINB : 
-            numdi[0] = buf[5];
-            numdi[1] = buf[6];
-            numdi[2] = '\0';
-            num_diff = atoi(numdi);
-        default :
-            printf("ERREUR TYPE MESSAGE\n");
-            return EXIT_FAILURE;
+    if(type == LINB) {
+        numdi[0] = buf[5];
+        numdi[1] = buf[6];
+        numdi[2] = '\0';
+        num_diff = atoi(numdi);
+    }
+    else {
+        printf("ERREUR TYPE MESSAGE\n");
+        return EXIT_FAILURE;
     }
     printf("Manager : %s\n", buf);
 
@@ -80,15 +101,12 @@ int interact_with_manager(char *adress, int port){
         }
         buf_diff[r] = '\0';
 
-        enum msg_type type = get_msg_type(buf);
+        enum msg_type type = get_msg_type(buf_diff);
         printf("Manager : %s\n", buf_diff);
         
-        switch(type){
-            case ITEM :
-                break;
-            default : 
-                printf("ERREUR MAUVAIS TYPE DE MESSAGES\n");
-                return EXIT_FAILURE;
+        if(type != ITEM){
+            printf("ERREUR MAUVAIS TYPE DE MESSAGES\n");
+            return EXIT_FAILURE;
         }
     }
     return 1;
