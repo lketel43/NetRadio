@@ -22,8 +22,6 @@ public class Streamer{
     private byte[][] lastStreamed = new byte[1000][SIZE_DIFF_MESS];
     private int lastSend = 0;
 
-    private boolean isRegistered = false;
-
     public void initLastStreamed(){
         for(int i = 0; i < this.lastStreamed.length; i++) this.lastStreamed[i] = null;
     }
@@ -187,6 +185,49 @@ public class Streamer{
 
 
 
+    /**********************************
+    *Functions to display informations*
+    **********************************/
+
+    private static String display(String s, int length){
+        StringBuffer buf = new StringBuffer(length);
+        for(int i = 0; i < s.length(); i++) buf.append(s.charAt(i));
+        for(int i = 0; i < length - s.length() - 1; i++) buf.append(" ");
+        buf.append("#");
+        return new String(buf);
+    }
+
+    private static void displayClientInfo(Socket sock){
+        System.out.println("#######################################");
+        System.out.println("# Nouvelle connexion avec établie     #");
+        System.out.println(display("# Port local : " + Integer.toString(sock.getLocalPort()), 39));
+        System.out.println(display("# Port distant : " + Integer.toString(sock.getPort ()), 39));
+        System.out.println(display("# Adresse locale : " + sock.getLocalAddress(), 39));
+        System.out.println(display("# Adresse distante : " + sock.getInetAddress(), 39));
+        System.out.println("#######################################\n");
+    }
+
+    public static void displayMessAdded(String id){
+        System.out.println("###########################################");
+        System.out.println(display("# Un message a été diffusé par : " + id, 43));
+        System.out.println("###########################################\n");
+    }
+
+    public static void displayLastMess(int nbMess){
+        System.out.println("##########################################################################");
+        System.out.println(display("# Un utilisateur a demandé à consulter les " + Integer.toString(nbMess) + " derniers messages diffusés", 74));
+        System.out.println("##########################################################################\n");
+    }
+
+    /**************************************
+    *End functions to display informations*
+    **************************************/
+
+
+
+
+
+
     public static void startStream(Streamer stream, String managerAddress, int managerPort){
         MulticastService mService = new MulticastService(stream);
         Thread mThread = new Thread(mService);
@@ -200,6 +241,7 @@ public class Streamer{
             ServerSocket server = new ServerSocket(stream.recvPort);
             while(true){
                 Socket sock = server.accept();
+                displayClientInfo(sock);
                 ClientService cService = new ClientService(stream, sock);
                 Thread cThread = new Thread(cService);
                 cThread.start();

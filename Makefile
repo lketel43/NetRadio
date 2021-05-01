@@ -25,7 +25,8 @@ CLASSES=\
 		src/ClientService.java \
 		src/JavaClient.java \
 		src/Streamer.java \
-		src/ManagerService.java
+		src/ManagerService.java \
+		src/StreamFile.java
 
 all:
 	$(MAKE) classes
