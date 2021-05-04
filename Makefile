@@ -1,44 +1,64 @@
-.PHONY=clean all
-CC=gcc
-CFLAGS = -g -Wall -pthread
-JC=javac
-CLASSPATH=-classpath src/
-JFLAGS=
+# C
+CSRC_DIR = c/
+COBJ_DIR = cobj/
 
-%.class : %.java
-	$(JC) $(CLASSPATH) $*.java
+CC	= gcc
+CFLAGS	= -g -Wall -pthread
 
-%.o : %.c
-	$(CC) $(CFLAGS) -o $@ -c $< 
+# JAVA
+JSRC_DIR   = java/
+JCLASS_DIR = jclass/
+
+JC = javac
+# Pour JCFLAGS ne pas mettre d'option -cp ou -d
+JCFLAGS = -Xlint:all
 
 
-CFILES=\
-		src/message.c \
-		src/manager.c \
-		src/utils.c
+#########################################
+# NE PAS MODIFIER CE QUI EST EN DESSOUS #
+#########################################
 
-OBJ = $(CFILES:%.c=%.o)
+CSRC  = $(wildcard $(CSRC_DIR)*.c)
+COBJ = $(notdir $(CSRC:.c=.o))
+COBJ := $(addprefix $(COBJ_DIR), $(COBJ))
 
-CLASSES=\
-		src/Message.java \
-		src/MulticastService.java \
-		src/ClientService.java \
-		src/JavaClient.java \
-		src/Streamer.java \
-		src/ManagerService.java \
-		src/StreamFile.java
 
-all:
-	$(MAKE) classes
-	$(MAKE) exec
+JSRC = $(wildcard $(JSRC_DIR)*.java)
+JCLASS = $(notdir $(JSRC:.java=.class))
+JCLASS := $(addprefix $(JCLASS_DIR), $(JCLASS))
 
-classes: $(CLASSES:.java=.class)
-	mv src/*.class src/target
 
-exec: $(OBJ)
-	$(CC) $(CFLAGS) -o $@ $^ 
-	mv $(OBJ) src/target
-	mv exec src/target
+all: c java
 
-clean:
-	rm src/target/*.o src/target/*.class src/target/exec
+cleanc:
+	rm -rf $(COBJ_DIR)
+
+cleanj:
+	rm -rf  $(JCLASS_DIR)
+
+clean: cleanc cleanj
+
+#############################
+# COMPILATION DES FICHIER C #
+#############################
+
+c: $(COBJ)
+
+$(COBJ_DIR):
+	@mkdir -p $(COBJ_DIR)
+
+$(COBJ_DIR)%.o: $(CSRC_DIR)%.c | $(COBJ_DIR)
+	$(CC) -c -o $@ $< $(CFLAGS)
+
+
+#################################
+# COMPILATION DES FICHIERS JAVA #
+#################################
+
+java: $(JCLASS)
+
+$(JCLASS_DIR):
+	@mkdir -p $(JCLASS_DIR)
+
+$(JCLASS_DIR)%.class: $(JSRC_DIR)%.java | $(JCLASS_DIR)
+	$(JC) -d $(JCLASS_DIR) -cp $(JSRC_DIR) $(JCFLAGS) $<
