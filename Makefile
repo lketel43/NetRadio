@@ -13,6 +13,8 @@ JC = javac
 # Pour JCFLAGS ne pas mettre d'option -cp ou -d
 JCFLAGS = -Xlint:all
 
+# TAR
+TAR_NAME = netradio.tar
 
 #########################################
 # NE PAS MODIFIER CE QUI EST EN DESSOUS #
@@ -29,14 +31,6 @@ JCLASS := $(addprefix $(JCLASS_DIR), $(JCLASS))
 
 
 all: c java
-
-cleanc:
-	rm -rf $(COBJ_DIR)
-
-cleanj:
-	rm -rf  $(JCLASS_DIR)
-
-clean: cleanc cleanj
 
 #############################
 # COMPILATION DES FICHIER C #
@@ -62,3 +56,20 @@ $(JCLASS_DIR):
 
 $(JCLASS_DIR)%.class: $(JSRC_DIR)%.java | $(JCLASS_DIR)
 	$(JC) -d $(JCLASS_DIR) -cp $(JSRC_DIR) $(JCFLAGS) $<
+
+#########################################
+# NETTOYAGE DES DOSSIERS DE COMPILATION #
+#########################################
+cleanc:
+	rm -rf $(COBJ_DIR)
+
+cleanj:
+	rm -rf  $(JCLASS_DIR)
+
+clean: cleanc cleanj
+
+#############################
+# CREATION DU TAR DU PROJET #
+#############################
+tar:
+	tar -cvf $(TAR_NAME) Makefile $(JSRC_DIR) $(CSRC_DIR)
