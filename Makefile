@@ -9,7 +9,7 @@ CFLAGS	= -g -Wall -pthread
 # JAVA
 JSRC_DIR   = java/
 JCLASS_DIR = jclass/
-JPROG =
+JPROG_NAME = JavaClient Streamer
 
 JC = javac
 # Pour JCFLAGS ne pas mettre d'option -cp ou -d
@@ -21,7 +21,6 @@ TAR_NAME = netradio.tar
 #########################################
 # NE PAS MODIFIER CE QUI EST EN DESSOUS #
 #########################################
-
 all: c java
 
 #############################
@@ -55,7 +54,10 @@ JSRC = $(wildcard $(JSRC_DIR)*.java)
 JCLASS = $(notdir $(JSRC:.java=.class))
 JCLASS := $(addprefix $(JCLASS_DIR), $(JCLASS))
 
-java: $(JCLASS)
+java: $(JPROG_NAME)
+
+$(JPROG_NAME): $(JCLASS)
+	jar cfe $@.jar $@ -C $(JCLASS_DIR) . 
 
 $(JCLASS_DIR):
 	@mkdir -p $(JCLASS_DIR)
@@ -70,7 +72,7 @@ cleanc:
 	rm -rf $(COBJ_DIR) $(CPROG_NAME)
 
 cleanj:
-	rm -rf  $(JCLASS_DIR)
+	rm -rf  $(JCLASS_DIR) $(addsuffix .jar, $(JPROG_NAME))
 
 clean: cleanc cleanj
 
