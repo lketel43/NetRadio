@@ -1,7 +1,7 @@
 # C
 CSRC_DIR = c/
 COBJ_DIR = cobj/
-CPROG_NAME = manager
+CMAIN_NAME = manager
 
 CC	= gcc
 CFLAGS	= -g -Wall -pthread
@@ -9,7 +9,7 @@ CFLAGS	= -g -Wall -pthread
 # JAVA
 JSRC_DIR   = java/
 JCLASS_DIR = jclass/
-JPROG_NAME = JavaClient Streamer
+JMAIN_NAME = JavaClient Streamer
 
 JC = javac
 # Pour JCFLAGS ne pas mettre d'option -cp ou -d
@@ -21,24 +21,33 @@ TAR_NAME = netradio.tar
 #########################################
 # NE PAS MODIFIER CE QUI EST EN DESSOUS #
 #########################################
-all: c java
+# Compilation des fichiers C et Java
+all: c java scenario
+
+# Nettoyage des fichiers de compilation C et Java et Scenarios
+clean: cleanc cleanj cleans
+
+# Création du .tar contenant les fichiers .java, .c et Makefile
+tar:
+	tar -cvf $(TAR_NAME) Makefile $(JSRC_DIR) $(CSRC_DIR)
+
 
 #############################
 # COMPILATION DES FICHIER C #
 #############################
-CPROG  = $(addprefix $(CSRC_DIR), $(CPROG_NAME))
-CPROG := $(addsuffix .c, $(CPROG))
+CMAIN  = $(addprefix $(CSRC_DIR), $(CMAIN_NAME))
+CMAIN := $(addsuffix .c, $(CMAIN))
 
 CSRC  = $(wildcard $(CSRC_DIR)*.c)
-CSRC := $(filter-out $(CPROG), $(CSRC))
+CSRC := $(filter-out $(CMAIN), $(CSRC))
 
 COBJ  = $(notdir $(CSRC:.c=.o))
 COBJ := $(addprefix $(COBJ_DIR), $(COBJ))
 
 
-c: $(CPROG_NAME)
+c: $(CMAIN_NAME)
 
-$(CPROG_NAME): $(COBJ)
+$(CMAIN_NAME): $(COBJ)
 	$(CC) -o $@ $(CFLAGS) $^ $(CSRC_DIR)$@.c
 
 $(COBJ_DIR):
@@ -47,16 +56,27 @@ $(COBJ_DIR):
 $(COBJ_DIR)%.o: $(CSRC_DIR)%.c | $(COBJ_DIR)
 	$(CC) -c -o $@ $< $(CFLAGS)
 
+# Nettoyage des fichiers de compilation C
+cleanc:
+	rm -rf $(COBJ_DIR) $(CMAIN_NAME)
+
+
 #################################
 # COMPILATION DES FICHIERS JAVA #
 #################################
+JMAIN = $(addsuffix .jar, $(JMAIN_NAME))
+
 JSRC = $(wildcard $(JSRC_DIR)*.java)
-JCLASS = $(notdir $(JSRC:.java=.class))
+
+JCLASS  = $(notdir $(JSRC:.java=.class))
 JCLASS := $(addprefix $(JCLASS_DIR), $(JCLASS))
 
-java: $(JPROG_NAME)
 
-$(JPROG_NAME): $(JCLASS)
+java: $(JMAIN)
+
+$(JMAIN): $(JMAIN_NAME)
+
+$(JMAIN_NAME): $(JCLASS)
 	jar cfe $@.jar $@ -C $(JCLASS_DIR) . 
 
 $(JCLASS_DIR):
@@ -65,19 +85,28 @@ $(JCLASS_DIR):
 $(JCLASS_DIR)%.class: $(JSRC_DIR)%.java | $(JCLASS_DIR)
 	$(JC) -d $(JCLASS_DIR) -cp $(JSRC_DIR) $(JCFLAGS) $<
 
-#########################################
-# NETTOYAGE DES DOSSIERS DE COMPILATION #
-#########################################
-cleanc:
-	rm -rf $(COBJ_DIR) $(CPROG_NAME)
-
+# Nettoyage des fichiers de compilation Java
 cleanj:
-	rm -rf  $(JCLASS_DIR) $(addsuffix .jar, $(JPROG_NAME))
+	rm -rf  $(JCLASS_DIR) $(JMAIN)
 
-clean: cleanc cleanj
 
 #############################
-# CREATION DU TAR DU PROJET #
+# COMPILATION DES SCENARIOS #
 #############################
-tar:
-	tar -cvf $(TAR_NAME) Makefile $(JSRC_DIR) $(CSRC_DIR)
+SCENARIO = $(wildcard scenario_*)
+
+SCENARIO_EXEC = $(join $(SCENARIO)/, $(SCENARIO))
+
+SCENARIO_CLASS = $(notdir $(SCENARIO:.java=.class))
+
+
+scenario: $(SCENARIO_EXEC) $(SCENARIO_CLASS)
+
+$(SCENARIO)/$(SCENARIO): $(wildcard $(SCENARIO)/*.c) $(COBJ)
+	$(CC) $(CFLAGS) -I $(CSRC_DIR) -o $@ $^
+
+$(SCENARIO)/%.class: $(SCENARIO)/%.java $(JCLASS)
+	$(JC) -d $(SCENARIO) $(JCFLAGS) -cp $(JCLASS_DIR);$(SCENARIO)/
+
+cleans:
+	rm -rf $(SCENARIO_EXEC)
