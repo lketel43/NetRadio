@@ -287,7 +287,7 @@ public class Streamer{
             StreamFile.addMessFromFile(s, args[1]);
             startStream(s, null, -1);
         }
-        else Sytem.out.println("Wrong options");
+        else System.out.println("Wrong options");
     }
     
 }
