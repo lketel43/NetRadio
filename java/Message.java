@@ -153,7 +153,7 @@ public class Message{
         Arrays.fill(bytes, (byte) DEFAULT_INT);
         byte[] tmpBytes = str.getBytes();
         int index = nbBytes - tmpBytes.length;
-        for(int i = index; i < nbBytes; i++)  bytes[i] = (byte) tmpBytes[i - index];
+        for(int i = index; i < nbBytes; i++) bytes[i] = tmpBytes[i - index];
         return bytes;
     }
 
