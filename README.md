@@ -26,4 +26,10 @@ Pour lancer un diffuseur grâce à des fichiers faire ``java Streamer file1 file
 * la troisième, l'addresse de multicast
 * la quatrième, le port de multicast
 * la cinquième, la fréquence d'envoi.
+
 ``file2`` contient les messages que l'on souhaite diffuser. La première ligne de ce fichier doit être l'id de l'auteur du message. Ensuite, chaque ligne contient un message.
+
+## Lancer un client
+
+Il y a deux manières de lancer un client. Soit lancer ``java JavaClient`` : cela lancera un client par défaut qui se connectera à l'adresse de multi diffusion ``225.0.0.0``, au port de multi diffusion ``5001``, à l'adresse ``localhost`` et au port ``4242``.
+Sinon, lancer ``java JavaClient`` avec les options, adresse de multi diffusion, port multi diffusion, adresse pour mode connecté, port pout le mode connecté.
