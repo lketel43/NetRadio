@@ -152,7 +152,7 @@ static int monitor_broadcaster (int broadcasterfd, char *canary)
       else if (r == 0)
 	{
 	  if (verbose)
-	    printf("Le gestionnaire s'est déconnecté\n");
+	    printf("Le diffuseur s'est déconnecté\n");
 	  
 	  goto error;
 	}
