@@ -29,10 +29,4 @@ public class StreamFile{
         }
     }
 
-    public static void main(String[] args){
-        Streamer s = initStreamerFromFile("stream.txt");
-        addMessFromFile(s, "messages.txt");
-        Streamer.startStream(s, "localhost", 4343);
-    }
-
 }

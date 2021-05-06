@@ -22,6 +22,7 @@ public class ClientService implements Runnable{
             switch(type){
                 case LAST :
                     synchronized(this.stream){
+                        Streamer.displayLastMess(Message.getNbMsg(messB));
                         byte[][] last = stream.getLastMess(Message.getNbMsg(messB));
                         for(int i = 0; i < last.length; i++){
                             writer.print(new String(Message.DiffToOldm(last[i])));
@@ -40,6 +41,7 @@ public class ClientService implements Runnable{
                         String id = Message.getID(messB);
                         String msg = Message.getMsg(messB);
                         this.stream.addMess(msg, id);
+                        Streamer.displayMessAdded(id);
                         byte[] end2 = Message.createMsg("ACKM");
                         writer.print(new String(end2));
                         writer.flush();
