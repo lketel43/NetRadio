@@ -230,6 +230,7 @@ int main(int argc, char *argv[]){
         strcpy(adresse_multicast, argv[3]);
         adresse_multicast[15] = '\0';
         port_multicast = atoi(argv[4]);
+        int interact_with_diff_and_multi(adresse_diff, port_diff, adresse_multicast, port_multicast);
         //Fonction qui lance la connection au diffuseur et au multicast, 
         //lance les messages du multidiffuseur et attend une commande pour un diffuseur
     }
