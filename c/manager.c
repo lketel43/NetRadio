@@ -5,6 +5,7 @@
 
 #include <assert.h>
 #include <ctype.h>
+#include <getopt.h>
 #include <netinet/in.h>
 #include <pthread.h>
 #include <stdbool.h>
@@ -15,16 +16,17 @@
 
 #include <errno.h>
 
+
 #define BUFSIZE 512
 
 #define TIMEOUT_SEC 2
 #define TIMEOUT_USEC 0
 
+/* Nom du programme */
+#define PROGRAM_NAME "manager"
+
 /* Nombre maximale de diffuseur que le gestionnaire peut gérer */
 #define MAX_REGISTERED_BROADCASTER 100
-
-/* Délai en secondes pour tester la présence d'un diffuseur */
-#define CHECK_DELAY 5
 
 
 /* Registre des diffuseurs */
@@ -34,16 +36,32 @@ static char broadcaster_register[MAX_REGISTERED_BROADCASTER][REGI_LEN+1];
 static pthread_mutex_t register_mutex = PTHREAD_MUTEX_INITIALIZER;
 
 
-/* Si TRUE alors on explique les opérations */
+/* "Levier" pour l'option v (verbose).
+ * Si vraie alors on explique ce qu'il se passe */
 static bool verbose;
 
-/* Options supportées :
- * 
- * -v 
- *    verbose, explique ce qu'il se passe
- */
-static const char* options = "v";
+/* "Levier" pour l'option d (délai d'attente/check_delay)
+ * temps d'attente en seconde entre chaque envoi de RUOK */
+static unsigned int check_delay;
 
+/* Les options supportées */
+static const char* options = "d:hv";
+
+/* Affiche l'aide du gestionnaire */
+static void usage (int exit_status);
+
+
+static bool set_check_delay (char *spec)
+{
+  char* end = spec;
+  errno = 0;
+  unsigned int val = strtol (spec, &end, 10);
+  if (errno != 0 || end == spec || *end != 0)
+    return false;
+
+  check_delay = val;
+  return true;
+}
 
 static void verbose_print_message (const char *intro, const char *msg)
 {
@@ -121,8 +139,8 @@ static int monitor_broadcaster (int broadcasterfd, char *canary)
     {
       // 1 - SLEEP
       if (verbose)
-	printf("On attend %ds\n", CHECK_DELAY);
-      sleep (CHECK_DELAY);
+	printf("On attend %ds\n", check_delay);
+      sleep (check_delay);
 
       // 2 - SEND RUOK
       create_message (msg_buf, RUOK);
@@ -431,46 +449,65 @@ static int start_manager (int serverfd)
 int main (int argc, char **argv)
 {
   struct sockaddr_in address;
-  int sockfd, port, r;
-  int opt;
+  int sockfd, port, r;  
 
-  
   opterr = 0;
-    
-  /* On décode les options */
-  verbose = false;
   
-  while ((opt = getopt(argc, argv, options)) != -1)
+  /* Valeurs par défaut des options */
+  verbose = 0;
+  check_delay = 30;
+
+  /* On décode les options */
+  while (true)
     {
-      switch (opt)
+      int c = getopt (argc, argv, options);
+
+      if (c == -1)
+	break;
+      
+      switch (c)
 	{
 	case 'v':
 	  verbose = true;
 	  break;
+
+	case 'd':
+	  if (! set_check_delay (optarg))
+	    {
+	      fprintf (stderr, "Temps d'attente invalide.\n");
+	      usage (EXIT_FAILURE);
+	    }
+	  break;
+
 	case '?':
-	  if (isprint (optopt))
-	    fprintf (stderr, "option invalide -- '%c'\n", optopt);
+	  if (optopt == 'd')
+	    fprintf (stderr, "L'options '-%c' a besoin d'un argument.\n", optopt);
+	  else if (isprint (optopt))
+	    fprintf (stderr, "Option inconnue '-%c'.\n", optopt);
 	  else
-	    fprintf (stderr, "caractère non reconnu -- '\\x%x'\n", optopt);
-	  return EXIT_FAILURE;
+	    fprintf (stderr, "Caractère d'option inconnue '\\x%x'.\n", optopt);
+	  usage (EXIT_FAILURE);
+	  
+	case 'h':
+	  usage (EXIT_SUCCESS);
+	  
 	default:
-	  abort();
+	  usage (EXIT_FAILURE);
 	}
     }
 
   if (optind != argc - 1)
     {
-      fprintf (stderr, "Usage: %s [OPTION]... PORT\n", argv[0]);
-      return EXIT_FAILURE;
+      fprintf (stderr, "Mauvais nombre d'argument(s)\n");
+      usage (EXIT_FAILURE);
     }
-  
   
   // Port
   port = strtol(argv[optind], NULL, 10);
   if (port <= 0)
     {
-      fprintf (stderr, "Erreur dans le port\n");
-      return EXIT_FAILURE;
+      fprintf (stderr, "Erreur dans le n° de port\n");
+      usage (EXIT_FAILURE);
     }
   
   sockfd = init_manager (&address, port);
@@ -486,4 +523,23 @@ int main (int argc, char **argv)
   shutdown(sockfd, SHUT_RDWR);
   
   return r;
+}
+
+static void usage (int exit_status)
+{
+  if (exit_status != EXIT_SUCCESS)
+    fprintf (stderr, "Saisissez \"%s -h\" pour plus d'informations.\n", PROGRAM_NAME);
+  else
+    {
+      printf ("Usage: %s [OPTION]... PORT\n", PROGRAM_NAME);
+      fputs ("Lance le gestionnaire écoutant sur PORT\n\n", stdout);
+
+      fputs ("\
+  -h                 affiche cette aide.\n\
+  -v                 active le mode verbeux.\n\
+  -d TEMPS           fais attendre le gestionnaire TEMPS secondes entre chaque envoi de RUOK;\n\
+	             la valeur par défaut est 30 secondes.\n", stdout);
+    }
+  
+  exit (exit_status);
 }
