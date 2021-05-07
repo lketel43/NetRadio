@@ -22,6 +22,8 @@
 #define TIMEOUT_SEC 2
 #define TIMEOUT_USEC 0
 
+#define NB_SECONDS_ONE_DAY 86400
+
 /* Nom du programme */
 #define PROGRAM_NAME "manager"
 
@@ -50,18 +52,6 @@ static const char* options = "d:hv";
 /* Affiche l'aide du gestionnaire */
 static void usage (int exit_status);
 
-
-static bool set_check_delay (char *spec)
-{
-  char* end = spec;
-  errno = 0;
-  unsigned int val = strtol (spec, &end, 10);
-  if (errno != 0 || end == spec || *end != 0)
-    return false;
-
-  check_delay = val;
-  return true;
-}
 
 static void verbose_print_message (const char *intro, const char *msg)
 {
@@ -449,7 +439,8 @@ static int start_manager (int serverfd)
 int main (int argc, char **argv)
 {
   struct sockaddr_in address;
-  int sockfd, port, r;  
+  unsigned int port;
+  int sockfd, r;  
 
   opterr = 0;
   
@@ -472,7 +463,7 @@ int main (int argc, char **argv)
 	  break;
 
 	case 'd':
-	  if (! set_check_delay (optarg))
+	  if (! set_uint_from_string (optarg, &check_delay) || check_delay > NB_SECONDS_ONE_DAY)
 	    {
 	      fprintf (stderr, "Temps d'attente invalide.\n");
 	      usage (EXIT_FAILURE);
@@ -503,8 +494,7 @@ int main (int argc, char **argv)
     }
   
   // Port
-  port = strtol(argv[optind], NULL, 10);
-  if (port <= 0)
+  if (! set_uint_from_string (argv[optind], &port))
     {
       fprintf (stderr, "Erreur dans le n° de port\n");
       usage (EXIT_FAILURE);
@@ -516,7 +506,11 @@ int main (int argc, char **argv)
     return EXIT_FAILURE;
 
   if (verbose)
-    printf ("Lancement du gestionnaire sur le port : %d\n", port);
+    {
+      printf ("Lancement du gestionnaire\n");
+      printf ("- Port gestionnaire : %d\n", port);
+      printf ("- Délai d'attente   : %us\n", check_delay);
+    }
   
   r = start_manager (sockfd);
   
@@ -534,11 +528,11 @@ static void usage (int exit_status)
       printf ("Usage: %s [OPTION]... PORT\n", PROGRAM_NAME);
       fputs ("Lance le gestionnaire écoutant sur PORT\n\n", stdout);
 
-      fputs ("\
+      printf ("\
   -h                 affiche cette aide.\n\
   -v                 active le mode verbeux.\n\
   -d TEMPS           fais attendre le gestionnaire TEMPS secondes entre chaque envoi de RUOK;\n\
-	             la valeur par défaut est 30 secondes.\n", stdout);
+	             la valeur par défaut est 30 secondes. Il faut que 0 <= TEMPS <= 86400 (=1 jour)\n");
     }
   
   exit (exit_status);
