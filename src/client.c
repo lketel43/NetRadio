@@ -10,8 +10,18 @@
 #include <sys/types.h>
 #include <sys/socket.h>
 #include <unistd.h>
+#include <sys/stat.h>
+#include <fcntl.h>
 
 #define BUFSIZE 512
+
+int port_diff;
+int port_multicast;
+int port_manager;
+char adresse_diff[16];
+char adresse_multicast[16];
+char adresse_manager[16];
+char terminal[11];
 
 int recv_message_gest(int sock, int num_diff){
     int r;
@@ -68,16 +78,17 @@ int communication_gest(int sock){
     r = recv_message_gest(sock, num_diff);
     if(!r)
         return EXIT_FAILURE;
+
     return 1;
 }
 
-int interact_with_manager(char *adress, int port){
+int interact_with_manager(){
     struct sockaddr_in adr_sock;
     int sock;
     
     adr_sock.sin_family = AF_INET;
-    adr_sock.sin_port = htons(port);
-    inet_aton(adress, &adr_sock.sin_addr);
+    adr_sock.sin_port = htons(port_manager);
+    inet_aton(adresse_manager, &adr_sock.sin_addr);
 
     sock = socket(PF_INET, SOCK_STREAM, 0);
     if(sock == -1){
@@ -94,7 +105,7 @@ int interact_with_manager(char *adress, int port){
     r = communication_gest(sock);
     if(!r)
         return EXIT_FAILURE;
-    
+    close(sock);
     return 1;
 }
 
@@ -132,6 +143,7 @@ int mess_diff(int sockd, char *pseudo_id){
         printf("Erreur message retour du diff en post_mess\n");
         return EXIT_FAILURE;
     }
+    
     return 1;
 }
 
@@ -157,6 +169,7 @@ int last_diff(int sockd){
             return EXIT_FAILURE;
         }
     }
+    return 1;
 }
 
 int communication_diff(int sockd, char *pseudo_id){
@@ -192,27 +205,27 @@ int communication_diff(int sockd, char *pseudo_id){
     return 1;
 }
 
-int interact_with_diff(char *adress_d, int port_d){
+void *interact_with_diff(){
     struct sockaddr_in adr_sockd;
     int sockd;
     
     adr_sockd.sin_family = AF_INET;
-    adr_sockd.sin_port = htons(port_d);
-    if(inet_aton(adress_d, &adr_sockd.sin_addr) == 0){
+    adr_sockd.sin_port = htons(port_diff);
+    if(inet_aton(adresse_diff, &adr_sockd.sin_addr) == 0){
         printf("Adress unvalid...\n");
-        return EXIT_FAILURE;
+        return NULL;
     }
     
     sockd = socket(PF_INET, SOCK_STREAM, 0);
     if(sockd == -1){
         printf("Erreur lors de la création de la socket...\n");
-        return EXIT_FAILURE;
+        return NULL;
     }
     
     int r = connect(sockd, (struct sockaddr *)&adr_sockd, sizeof(struct sockaddr_in));
     if(r == -1){
         printf("Erreur connect\n");
-        return EXIT_FAILURE;
+        return NULL;
     }
     
     char pseudo_id[BUFSIZE];
@@ -226,12 +239,12 @@ int interact_with_diff(char *adress_d, int port_d){
 
     int a = communication_diff(sockd, pseudo_id);
     if(!a)
-        return EXIT_FAILURE;
-    
-    return 1;
+        return NULL;
+    close(sockd);
+    return NULL;
 }
 
-int interact_with_multi(char *adress, int port){
+void *interact_with_multi(void *arg){
     //struct sockaddr_in adr_sock;
     //int sock;
     //AMELIORER ET RELIRE MULTICAST + THREAD MULTICAST
@@ -239,7 +252,7 @@ int interact_with_multi(char *adress, int port){
     int fd = socket(AF_INET, SOCK_DGRAM, 0);
     if (fd < 0) {
         perror("socket");
-        return 1;
+        return NULL;
     }
 
     // allow multiple sockets to use the same PORT number
@@ -247,7 +260,7 @@ int interact_with_multi(char *adress, int port){
     u_int yes = 1;
     if (setsockopt(fd, SOL_SOCKET, SO_REUSEADDR, (char*) &yes, sizeof(yes)) < 0){
        perror("Reusing ADDR failed");
-       return 1;
+       return NULL;
     }
 
         // set up destination address
@@ -256,111 +269,69 @@ int interact_with_multi(char *adress, int port){
     memset(&addr, 0, sizeof(addr));
     addr.sin_family = AF_INET;
     addr.sin_addr.s_addr = htonl(INADDR_ANY); // differs from sender
-    addr.sin_port = htons(port);
+    addr.sin_port = htons(port_multicast);
 
     // bind to receive address
     //
     if (bind(fd, (struct sockaddr*) &addr, sizeof(addr)) < 0) {
         perror("bind");
-        return 1;
+        return NULL;
     }
 
     // use setsockopt() to request that the kernel join a multicast group
     //
     struct ip_mreq mreq;
-    mreq.imr_multiaddr.s_addr = inet_addr(adress);
+    mreq.imr_multiaddr.s_addr = inet_addr(adresse_multicast);
     mreq.imr_interface.s_addr = htonl(INADDR_ANY);
     if (setsockopt(fd, IPPROTO_IP, IP_ADD_MEMBERSHIP, (char*) &mreq, sizeof(mreq)) < 0){
         perror("setsockopt");
-        return 1;
+        return NULL;
     }
 
     // now just enter a read-print loop
     //
+    int term = open(terminal, S_IRWXU);
     while (1) {
         char msgbuf[BUFSIZE];
         socklen_t addrlen = sizeof(addr);
         int nbytes = recvfrom(fd, msgbuf, BUFSIZE-1, 0, (struct sockaddr *) &addr, &addrlen);
         if (nbytes < 0) {
             perror("recvfrom");
-            return 1;
+            return NULL;
         }
         msgbuf[nbytes] = '\0';
-        printf("%s\n", msgbuf);
+        write(term, msgbuf, strlen(msgbuf));
     }
-
-    /*sock = socket(PF_INET, SOCK_DGRAM, 0);
-	memset(&adr_sock, 0, sizeof(struct sockaddr_in));
-	adr_sock.sin_family = AF_INET;
-	adr_sock.sin_port = htons(port);
-	if(inet_aton(adress, &adr_sock.sin_addr) == 0){
-        printf("Adress unvalid...\n");
-        return EXIT_FAILURE;
-    }
-	char buff[2000];
-	socklen_t len;
-	while(1){
-		char *snd = "";
-		sendto(sock, snd, 1, 0, (struct sockaddr *) &adr_sock, (socklen_t)sizeof(struct sockaddr_in));
-		int n = recvfrom(sock, buff, 2000, 0, (struct sockaddr *) &adr_sock, &len);
-		buff[n] = '\0';
-		printf("%s\n", buff);
-	}*/
-
-    /*printf("salut 1\n");
-    sock = socket(PF_INET, SOCK_DGRAM, 0);
-    int ok = 1;
-    int r = setsockopt(sock, SOL_SOCKET, SO_REUSEPORT, &ok, sizeof(ok));
-    adr_sock.sin_family=AF_INET;
-    adr_sock.sin_port=htons(port);
-    if(inet_aton(adress, &adr_sock.sin_addr) == 0){
-        printf("Adress unvalid...\n");
-        return EXIT_FAILURE;
-    }
-    printf("salut 2\n");
-    r = bind(sock, (struct sockaddr *)&adr_sock, sizeof(struct sockaddr_in));
-    printf("salut 3\n");
-    struct ip_mreq mreq;
-    mreq.imr_multiaddr.s_addr = inet_addr("225.1.2.4");
-    mreq.imr_interface.s_addr = htonl(INADDR_ANY);
-    printf("salut 4\n");
-    r = setsockopt(sock, IPPROTO_IP, IP_ADD_MEMBERSHIP, &mreq, sizeof(mreq));
-    if(r == -1)
-    {
-        perror("setsockopt");
-        return EXIT_FAILURE;
-    }
-    printf("salut 5\n");
-    char tampon[BUFSIZE];
-    while(1){
-        printf("salut 6\n");
-        int rec = recv(sock, tampon, BUFSIZE-1, 0);
-        tampon[rec] = '\0';
-        printf("%s\n",tampon);
-    }*/
-    return 1;
+    close(fd);
+    return NULL;
 }
 
 int main(int argc, char *argv[]){
-    int port_diff, port_multicast, port_manager;
-    char adresse_diff[16];
-    char adresse_multicast[16];
-    char adresse_manager[16];
     
-    if(argc!=5 && argc!=3){
+    if(argc!=6 && argc!=3){
         printf("Erreur : Il n'y a pas le bon nombre d'arguments...\n");
         printf("Rappel des formats clients :\n\t./client adresse_diff port_diff\n\t./client adresse_multicast port_multicast\n\t./client addresse_multicast port_multicast adresse_diff port_diff");
         return EXIT_FAILURE;
     }
-    else if(argc==5){
-        //strcpy(adresse_diff, argv[1]);
-        //adresse_diff[15] = '\0';
-        //port_diff = atoi(argv[2]);
+    else if(argc==6){
+        strcpy(adresse_diff, argv[1]);
+        adresse_diff[15] = '\0';
+        port_diff = atoi(argv[2]);
         strcpy(adresse_multicast, argv[3]);
         adresse_multicast[15] = '\0';
         port_multicast = atoi(argv[4]);
-        //interact_with_diff(adresse_diff, port_diff);
-        interact_with_multi(adresse_multicast, port_multicast);
+        strcpy(terminal, argv[5]);
+        terminal[10] = '\0';
+
+        pthread_t th1;
+        pthread_t th2;
+        
+        pthread_create(&th1, NULL, interact_with_multi, NULL);
+        pthread_join(th1, NULL);
+
+        pthread_create(&th2, NULL, interact_with_diff, NULL);
+        pthread_join(th2, NULL);
+        
         //Fonction qui lance la connection au diffuseur et au multicast, 
         //lance les messages du multidiffuseur et attend une commande pour un diffuseur
     }
