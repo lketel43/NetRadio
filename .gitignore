@@ -40,6 +40,10 @@
 *.i*86
 *.x86_64
 *.hex
+manager
+client
+scenario_0/scenario_0
+src/
 
 # Debug files
 *.dSYM/

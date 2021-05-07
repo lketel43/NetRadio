@@ -29,7 +29,13 @@ public class JavaClient{
 
     public static void main(String[] args){
 
-        client("225.0.0.0", 5001, "localhost", 4242);
+        if(args.length == 0){
+            client("225.0.0.0", 5001, "localhost", 4242);
+        }
+        else if(args.length == 4){
+            client(args[0], Integer.parseInt(args[1]), args[2], Integer.parseInt(args[3]));
+        }
+        else System.out.println("Wrong options");
 
     }
 
