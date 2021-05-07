@@ -47,8 +47,8 @@ COBJ := $(addprefix $(COBJ_DIR), $(COBJ))
 
 c: $(CMAIN_NAME)
 
-$(CMAIN_NAME): $(COBJ)
-	$(CC) -o $@ $(CFLAGS) $^ $(CSRC_DIR)$@.c
+$(CMAIN_NAME): %: $(COBJ) $(CSRC_DIR)%.c
+	$(CC) -o $@ $(CFLAGS) $^
 
 $(COBJ_DIR):
 	@mkdir -p $(COBJ_DIR)

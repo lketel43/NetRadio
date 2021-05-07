@@ -2,7 +2,9 @@
 
 #include <arpa/inet.h>
 #include <ctype.h>
+#include <errno.h>
 #include <stdio.h>
+#include <stdlib.h>
 
 void print_sockaddr_in_info (const struct sockaddr_in *sockaddr)
 {
@@ -50,4 +52,18 @@ void print_raw_string (const char *str)
     {
       print_raw_char (str[i]);
     }
+}
+
+bool set_uint_from_string (char *str, unsigned int *nb)
+{
+  errno = 0;
+  
+  char* end = str;
+  int val = strtoul (str, &end, 10);
+
+  if (errno != 0 || end == str || *end != 0 || val < 0)
+    return false;
+
+  *nb = val;
+  return true;
 }
