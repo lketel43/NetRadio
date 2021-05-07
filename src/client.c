@@ -22,6 +22,7 @@ char adresse_diff[16];
 char adresse_multicast[16];
 char adresse_manager[16];
 char terminal[11];
+char pseudo_id[9];
 
 int recv_message_gest(int sock, int num_diff){
     int r;
@@ -109,7 +110,7 @@ int interact_with_manager(){
     return 1;
 }
 
-int mess_diff(int sockd, char *pseudo_id){
+int mess_diff(int sockd){
     char mes_buf[BUFSIZE];
     char mess[BUFSIZE];
     if(*(fgets(mes_buf, BUFSIZE, stdin)) != '\n')
@@ -149,7 +150,18 @@ int mess_diff(int sockd, char *pseudo_id){
 
 int last_diff(int sockd){
     int nb_mess, r;
-    scanf("%d", &nb_mess);
+    char nb_mess_char[BUFSIZE];
+
+    if(*(fgets(nb_mess_char, BUFSIZE, stdin)) != '\n'){
+        int i = 0;
+        while(nb_mess_char[i] != '\n')i++;
+        nb_mess_char[i] = '\0';
+        nb_mess = atoi(nb_mess_char);
+    }else{
+        printf("Pas un nombre... Deconnexion du client\n");
+        return EXIT_FAILURE;
+    }
+    
     printf("Voici les %d derniers messages :\n", nb_mess);
     char mess[BUFSIZE];
     create_message(mess, LAST, nb_mess);
@@ -172,7 +184,7 @@ int last_diff(int sockd){
     return 1;
 }
 
-int communication_diff(int sockd, char *pseudo_id){
+int communication_diff(int sockd){
     int r;
     char mes_type[BUFSIZE];
     printf("Vous pouvez faire ces actions : MESS ou LAST\n");
@@ -187,7 +199,7 @@ int communication_diff(int sockd, char *pseudo_id){
     if(strcmp(mes_type, "MESS") == 0 || strcmp(mes_type, "mess") == 0)
     {
         printf("Vous pouvez dès à présent entrer votre message.\n");
-        r = mess_diff(sockd, pseudo_id);
+        r = mess_diff(sockd);
         if(!r)
             return EXIT_FAILURE;
     } 
@@ -227,17 +239,8 @@ void *interact_with_diff(){
         printf("Erreur connect\n");
         return NULL;
     }
-    
-    char pseudo_id[BUFSIZE];
-    printf("Pouvez entrer votre pseudo de 8 caractères svp ?\n");
-    if(*(fgets(pseudo_id, BUFSIZE, stdin)) != '\n'){
-        int i = 0;
-        while(pseudo_id[i] != '\n' && i < 9)i++;
-        pseudo_id[i] = '\0';
-        printf("Nous vous confirmons votre pseudo : %s\n", pseudo_id);
-    }
 
-    int a = communication_diff(sockd, pseudo_id);
+    int a = communication_diff(sockd);
     if(!a)
         return NULL;
     close(sockd);
@@ -290,7 +293,11 @@ void *interact_with_multi(void *arg){
 
     // now just enter a read-print loop
     //
-    int term = open(terminal, S_IRWXU);
+    int term = open(terminal, O_WRONLY);
+    if(term == -1){
+        perror("open");
+        return NULL;
+    }
     while (1) {
         char msgbuf[BUFSIZE];
         socklen_t addrlen = sizeof(addr);
@@ -302,6 +309,7 @@ void *interact_with_multi(void *arg){
         msgbuf[nbytes] = '\0';
         write(term, msgbuf, strlen(msgbuf));
     }
+    close(term);
     close(fd);
     return NULL;
 }
@@ -323,14 +331,26 @@ int main(int argc, char *argv[]){
         strcpy(terminal, argv[5]);
         terminal[10] = '\0';
 
-        pthread_t th1;
-        pthread_t th2;
-        
-        pthread_create(&th1, NULL, interact_with_multi, NULL);
-        pthread_join(th1, NULL);
+        printf("Pouvez entrer votre pseudo de 8 caractères svp ?\n");
+        while(*(fgets(pseudo_id, BUFSIZE, stdin)) == '\n'){}
+        int i = 0;
+        while(pseudo_id[i] != '\n' && i < 9)i++;
+        pseudo_id[i] = '\0';
+        printf("Nous vous confirmons votre pseudo : %s\n", pseudo_id);
 
-        pthread_create(&th2, NULL, interact_with_diff, NULL);
-        pthread_join(th2, NULL);
+        pthread_t th1;
+    
+        pthread_create(&th1, NULL, interact_with_multi, NULL);
+
+        char next[3];
+        do{
+            pthread_t th2;
+            pthread_create(&th2, NULL, interact_with_diff, NULL);
+            pthread_join(th2, NULL);
+            printf("Voulez vous continuer à envoyer des messages ou à en lire ?\n\tEntrez 'q'+ENTER pour arrêter ou sur n'importe quelle autre lettre pour rester puis ENTER.\n");     
+            fgets(next, BUFSIZE, stdin);
+            next[2] = '\0';
+        }while(next[0] != 'q');
         
         //Fonction qui lance la connection au diffuseur et au multicast, 
         //lance les messages du multidiffuseur et attend une commande pour un diffuseur
