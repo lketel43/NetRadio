@@ -3,6 +3,8 @@ import java.awt.*;
 
 public class ClientFrame extends JFrame{
 
+    private static final long serialVersionUID = 1000000000;
+
     private JTextArea messages = new JTextArea("");
 
     public ClientFrame(){
