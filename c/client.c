@@ -50,7 +50,11 @@ int communication_gest(int sock){
     int r;
     char mess[10];
     create_message(mess, LIST);
-    send(sock, mess, strlen(mess), 0);
+    r = send(sock, mess, strlen(mess), 0);
+    if(r == -1){
+        perror("send");
+        return EXIT_FAILURE;
+    }
 
     char buf[BUFSIZE];
     r = recv(sock, buf, BUFSIZE-1, 0);
@@ -125,10 +129,14 @@ int mess_diff(int sockd){
         printf("Chaine vide avec le diff... Deconnexion du client\n");
         return EXIT_FAILURE;
     }
-    send(sockd, mess, strlen(mess), 0);
+    int r = send(sockd, mess, strlen(mess), 0);
+    if(r == -1){
+        perror("send");
+        return EXIT_FAILURE;
+    }
         
     char buf[10];
-    int r = recv(sockd, buf, BUFSIZE-1, 0);
+    r = recv(sockd, buf, BUFSIZE-1, 0);
     if(r < 0)
     {
         perror("recv");
@@ -163,7 +171,11 @@ int last_diff(int sockd){
     printf("Voici les %d derniers messages :\n", nb_mess);
     char mess[BUFSIZE];
     create_message(mess, LAST, nb_mess);
-    send(sockd, mess, strlen(mess), 0);
+    r = send(sockd, mess, strlen(mess), 0);
+    if(r == -1){
+        perror("send");
+        return EXIT_FAILURE;
+    }
     for(int i = 0; i <= nb_mess; i++){
         char buf[BUFSIZE];
         r = recv(sockd, buf, BUFSIZE-1, 0);
