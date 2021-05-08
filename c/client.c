@@ -29,7 +29,7 @@ int recv_message_gest(int sock, int num_diff){
     for(int  i = 0; i < num_diff; i++){
         char buf_diff[BUFSIZE];
         r = recv(sock, buf_diff, BUFSIZE-1, 0);
-        if(r <= 0){
+        if(r < 0){
             perror("recv");
             return EXIT_FAILURE;
         }
@@ -54,7 +54,7 @@ int communication_gest(int sock){
 
     char buf[BUFSIZE];
     r = recv(sock, buf, BUFSIZE-1, 0);
-    if(r <= 0){
+    if(r < 0){
         perror("recv");
         return EXIT_FAILURE;
     }
@@ -129,7 +129,7 @@ int mess_diff(int sockd){
         
     char buf[10];
     int r = recv(sockd, buf, BUFSIZE-1, 0);
-    if(r <= 0)
+    if(r < 0)
     {
         perror("recv");
         return EXIT_FAILURE;
@@ -315,7 +315,7 @@ int main(int argc, char *argv[]){
     
     if(argc!=6 && argc!=3){
         printf("Erreur : Il n'y a pas le bon nombre d'arguments...\n");
-        printf("Rappel des formats clients :\n\t./client adresse_diff port_diff\n\t./client adresse_multicast port_multicast\n\t./client addresse_multicast port_multicast adresse_diff port_diff");
+        printf("Rappel des formats clients :\n\t./client adresse_gestionnaire port_gestionnaire\n\t./client adresse_diffuseur port_diffuseur adresse_multicast port_multicast endroit_ou_afficher_multicast\n");
         return EXIT_FAILURE;
     }
     else if(argc==6){
