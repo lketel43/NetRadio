@@ -50,3 +50,9 @@ Par exemple, la commande `./manager -v -d 5 5000` lance un gestionnaire en mode 
 #### Client java
 Il y a deux manières de lancer un client. Soit lancer ``java JavaClient`` : cela lancera un client par défaut qui se connectera à l'adresse de multi diffusion ``225.0.0.0``, au port de multi diffusion ``5001``, à l'adresse ``localhost`` et au port ``4242``.
 Sinon, lancer ``java JavaClient`` avec les options, adresse de multi diffusion, port multi diffusion, adresse pour mode connecté, port pout le mode connecté.
+
+### Client C 
+On peut lancer le client C pour qu'il communique soit avec un gestionnaire, soit avec un diffuseur+multicast. Il n'y a pas de connexion par défaut. Le client doit connaître les adresses du diffuseur ou du gestionnaire avec lequel il veut communiquer.  
+Communiquer avec un gestionnaire : ``./client adresse port`` où ``adresse`` et ``port`` sont ceux du gestionnaire en question.  
+Communiquer avec un diffuseur et multidiffuseur : ``./client adresse_diff port_diff adresse_multicast port_multicast fichier`` où ``fichier`` est le fichier où sont affichés les messages diffusés par le multi-diffuseur. La bonne démarche est : Ouvrir un terminal, tapez ``tty`` et copier-coller le résultat affiché à la place de fichier. Ainsi les messages s'afficheront dans ce nouveau terminal.
+ 
