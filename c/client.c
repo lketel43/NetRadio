@@ -22,7 +22,7 @@ char adresse_diff[16];
 char adresse_multicast[16];
 char adresse_manager[16];
 char terminal[11];
-char pseudo_id[9];
+char pseudo_id[BUFSIZE];
 
 int recv_message_gest(int sock, int num_diff){
     int r;
@@ -342,7 +342,7 @@ int main(int argc, char *argv[]){
     
         pthread_create(&th1, NULL, interact_with_multi, NULL);
 
-        char next[3];
+        char next[BUFSIZE];
         do{
             pthread_t th2;
             pthread_create(&th2, NULL, interact_with_diff, NULL);
