@@ -51,7 +51,6 @@ int communication_gest(int sock){
     char mess[10];
     create_message(mess, LIST);
     send(sock, mess, strlen(mess), 0);
-    printf("YOU : %s\n", mess);
 
     char buf[BUFSIZE];
     r = recv(sock, buf, BUFSIZE-1, 0);
@@ -127,7 +126,6 @@ int mess_diff(int sockd){
         return EXIT_FAILURE;
     }
     send(sockd, mess, strlen(mess), 0);
-    printf("YOU : %s\n", mess);
         
     char buf[10];
     int r = recv(sockd, buf, BUFSIZE-1, 0);
@@ -190,7 +188,6 @@ int communication_diff(int sockd){
     printf("Vous pouvez faire ces actions : MESS ou LAST\n");
     if(*(fgets(mes_type, BUFSIZE, stdin)) != '\n'){
         mes_type[4] = '\0';
-        printf("Message envoyé : %s\n", mes_type);
     }else{
         printf("Chaine vide avec le diff... Deconnexion du client\n");
         return EXIT_FAILURE;
@@ -198,14 +195,14 @@ int communication_diff(int sockd){
     
     if(strcmp(mes_type, "MESS") == 0 || strcmp(mes_type, "mess") == 0)
     {
-        printf("Vous pouvez dès à présent entrer votre message.\n");
+        printf("Entrez votre message :\n");
         r = mess_diff(sockd);
         if(!r)
             return EXIT_FAILURE;
     } 
     else if(strcmp(mes_type, "LAST") == 0 || strcmp(mes_type, "last") == 0)
     {
-        printf("Entrez le nombre de message à diffuser.\n");
+        printf("Entrez le nombre de messages que vous souhaitez :\n");
         r = last_diff(sockd);
         if(!r)
             return EXIT_FAILURE;
@@ -336,7 +333,6 @@ int main(int argc, char *argv[]){
         int i = 0;
         while(pseudo_id[i] != '\n' && i < 9)i++;
         pseudo_id[i] = '\0';
-        printf("Nous vous confirmons votre pseudo : %s\n", pseudo_id);
 
         pthread_t th1;
     
