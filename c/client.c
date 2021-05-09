@@ -257,10 +257,6 @@ void *interact_with_diff(){
 }
 
 void *interact_with_multi(void *arg){
-    //struct sockaddr_in adr_sock;
-    //int sock;
-    //AMELIORER ET RELIRE MULTICAST + THREAD MULTICAST
-    //FAIRE D'AUTRES POSSIBILITES D'UTILISATION DU CLIENT
     int fd = socket(AF_INET, SOCK_DGRAM, 0);
     if (fd < 0) {
         perror("socket");
@@ -268,30 +264,26 @@ void *interact_with_multi(void *arg){
     }
 
     // allow multiple sockets to use the same PORT number
-    //
     u_int yes = 1;
     if (setsockopt(fd, SOL_SOCKET, SO_REUSEADDR, (char*) &yes, sizeof(yes)) < 0){
-       perror("Reusing ADDR failed");
+       perror("setsockopt");
        return NULL;
     }
 
-        // set up destination address
-    //
+    // set up destination address
     struct sockaddr_in addr;
     memset(&addr, 0, sizeof(addr));
     addr.sin_family = AF_INET;
-    addr.sin_addr.s_addr = htonl(INADDR_ANY); // differs from sender
+    addr.sin_addr.s_addr = htonl(INADDR_ANY); 
     addr.sin_port = htons(port_multicast);
 
     // bind to receive address
-    //
     if (bind(fd, (struct sockaddr*) &addr, sizeof(addr)) < 0) {
         perror("bind");
         return NULL;
     }
 
     // use setsockopt() to request that the kernel join a multicast group
-    //
     struct ip_mreq mreq;
     mreq.imr_multiaddr.s_addr = inet_addr(adresse_multicast);
     mreq.imr_interface.s_addr = htonl(INADDR_ANY);
@@ -301,7 +293,6 @@ void *interact_with_multi(void *arg){
     }
 
     // now just enter a read-print loop
-    //
     int term = open(terminal, O_WRONLY);
     if(term == -1){
         perror("open");
