@@ -18,6 +18,7 @@ JCFLAGS = -Xlint:all
 # TAR
 TAR_NAME = netradio.tar
 
+
 #########################################
 # NE PAS MODIFIER CE QUI EST EN DESSOUS #
 #########################################
@@ -35,14 +36,13 @@ tar:
 #############################
 # COMPILATION DES FICHIER C #
 #############################
-CMAIN  = $(addprefix $(CSRC_DIR), $(CMAIN_NAME))
-CMAIN := $(addsuffix .c, $(CMAIN))
+CMAIN  = $(patsubst %,$(CSRC_DIR)%.c,$(CMAIN_NAME))
 
 CSRC  = $(wildcard $(CSRC_DIR)*.c)
-CSRC := $(filter-out $(CMAIN), $(CSRC))
+CSRC := $(filter-out $(CMAIN),$(CSRC))
 
 COBJ  = $(notdir $(CSRC:.c=.o))
-COBJ := $(addprefix $(COBJ_DIR), $(COBJ))
+COBJ := $(addprefix $(COBJ_DIR),$(COBJ))
 
 
 c: $(CMAIN_NAME)
@@ -64,20 +64,19 @@ cleanc:
 #################################
 # COMPILATION DES FICHIERS JAVA #
 #################################
-JMAIN = $(addsuffix .jar, $(JMAIN_NAME))
-
+JAR = $(addsuffix .jar,$(JMAIN_NAME))
 JSRC = $(wildcard $(JSRC_DIR)*.java)
 
-JCLASS  = $(notdir $(JSRC:.java=.class))
-JCLASS := $(addprefix $(JCLASS_DIR), $(JCLASS))
+# Exemple
+# java/Message.java -> jclass/Message.class
+JCLASS = $(patsubst $(JSRC_DIR)%.java,$(JCLASS_DIR)%.class,$(JSRC))
 
+.SECONDARY: $(JCLASS)
 
-java: $(JMAIN)
+java: $(JAR)
 
-$(JMAIN): $(JMAIN_NAME)
-
-$(JMAIN_NAME): $(JCLASS)
-	jar cfe $@.jar $@ -C $(JCLASS_DIR) . 
+%.jar: $(JCLASS)
+	jar cfe $@ $* -C $(JCLASS_DIR) . 
 
 $(JCLASS_DIR):
 	@mkdir -p $(JCLASS_DIR)
@@ -87,26 +86,41 @@ $(JCLASS_DIR)%.class: $(JSRC_DIR)%.java | $(JCLASS_DIR)
 
 # Nettoyage des fichiers de compilation Java
 cleanj:
-	rm -rf  $(JCLASS_DIR) $(JMAIN)
+	rm -rf $(JCLASS_DIR) $(JAR)
 
 
 #############################
 # COMPILATION DES SCENARIOS #
 #############################
 SCENARIO = $(wildcard scenario_*)
+SCENARIO_DIR = $(addsuffix /,$(SCENARIO))
 
-SCENARIO_EXEC = $(join $(SCENARIO)/, $(SCENARIO))
+FIND_JSRC = $(wildcard $(dir)*.java)
+SCENARIO_JCLASS := $(foreach dir,$(SCENARIO_DIR),$(FIND_JSRC:.java=.class))
 
-SCENARIO_CLASS = $(notdir $(SCENARIO:.java=.class))
+FIND_CSRC = $(wildcard $(dir)*.c)
+SCENARIO_COBJ := $(foreach dir,$(SCENARIO_DIR),$(FIND_CSRC:.c=.o))
+
+SCENARIO_EXEC = $(join $(SCENARIO_DIR),$(SCENARIO))
 
 
-scenario: $(SCENARIO_EXEC) $(SCENARIO_CLASS)
+scenario: c java $(SCENARIO_EXEC) $(SCENARIO_JCLASS)
 
-$(SCENARIO)/$(SCENARIO): $(wildcard $(SCENARIO)/*.c) $(COBJ)
-	$(CC) $(CFLAGS) -I $(CSRC_DIR) -o $@ $^
 
-$(SCENARIO)/%.class: $(SCENARIO)/%.java $(JCLASS)
-	$(JC) -d $(SCENARIO) $(JCFLAGS) -cp $(JCLASS_DIR);$(SCENARIO)/
+$(SCENARIO_EXEC): $(SCENARIO_COBJ)
+	$(if $(wildcard $(@D)/*.o),\
+		$(CC) -o $@ $(CFLAGS) -I $(CSRC_DIR) $(wildcard $(@D)/*.o))
+
+$(SCENARIO_COBJ): %.o: %.c
+	$(CC) -c -o $@ $< $(CFLAGS) -I $(CSRC_DIR)
+
+$(SCENARIO_JCLASS): %.class: %.java
+	$(JC) -d $(@D) -classpath $(JCLASS_DIR):$(@D)/ $(JCFLAGS) $<
 
 cleans:
-	rm -rf $(SCENARIO_EXEC)
+	rm -rf $(SCENARIO_EXEC) $(SCENARIO_JCLASS) $(SCENARIO_COBJ)
+
+# .SECONDEXPANSION:
+# $(SCENARIO_EXEC): $$(filter $(dir $$@)/%.o,$(SCENARIO_COBJ))
+# 	$(info $^)
+# 	$(CC) -o $@ $^
