@@ -372,7 +372,6 @@ char** get_last_mess (const char* streamer_ip, int streamer_port, int *nb_mess){
     
     
     char **last_mess = malloc((*nb_mess)*sizeof(char *));
-    printf("%d\n", *nb_mess);
     char mess[BUFSIZE];
     create_message(mess, LAST, *nb_mess);
     r = send(sockd, mess, strlen(mess), 0);
@@ -380,13 +379,10 @@ char** get_last_mess (const char* streamer_ip, int streamer_port, int *nb_mess){
         perror("send");
         return NULL;
     }
-    printf("Heyy\n");
     for(int i = 0; i <= *nb_mess; i++){
         last_mess[i] = malloc(BUFSIZE);
         r = recv(sockd, last_mess[i], BUFSIZE-1, 0);
         last_mess[i][r] = '\0';
-        printf("11\n");
-        printf("%s\n", last_mess[i]);
 
         enum msg_type type_buf = get_msg_type(last_mess[i]);
         if(type_buf == ENDM){
@@ -398,7 +394,6 @@ char** get_last_mess (const char* streamer_ip, int streamer_port, int *nb_mess){
             return NULL;
         }
     }
-    printf("Byee\n\n\n");
     return last_mess;
 }
 
