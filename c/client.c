@@ -35,7 +35,7 @@ int recv_message_gest(int sock, int num_diff){
         }
         buf_diff[r] = '\0';
 
-        enum msg_type type = get_msg_type(buf_diff);
+	msg_type type = get_msg_type(buf_diff);
         printf("Manager : %s\n", buf_diff);
         
         if(type != ITEM){
@@ -63,7 +63,7 @@ int communication_gest(int sock){
         return EXIT_FAILURE;
     }
     buf[r] = '\0';
-    enum msg_type type = get_msg_type(buf);
+     msg_type type = get_msg_type(buf);
 
     int num_diff;
     char numdi[3];
@@ -145,7 +145,7 @@ int mess_diff(int sockd){
     buf[r] = '\0';
     printf("%s\n", buf);
 
-    enum msg_type type_buf = get_msg_type(buf);
+     msg_type type_buf = get_msg_type(buf);
     if(type_buf != 0){
         printf("Erreur message retour du diff en post_mess\n");
         return EXIT_FAILURE;
@@ -182,7 +182,7 @@ int last_diff(int sockd){
         buf[r] = '\0';
         printf("%s\n", buf);
 
-        enum msg_type type_buf = get_msg_type(buf);
+         msg_type type_buf = get_msg_type(buf);
         if(type_buf == ENDM){
             break;
         }

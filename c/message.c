@@ -7,44 +7,32 @@
 #include <string.h>
 #include <stdio.h>
 
-//We just need strtok to split the message, with the delim ' '
 
+msg_type get_msg_type (const char *msg)
+{
+  char type[5];
+  strncpy (type, msg, 4);
+  type[4] = '\0';
+  
+  if     (strcmp("ACKM", type) == 0) return ACKM;
+  else if(strcmp("DIFF", type) == 0) return DIFF;
+  else if(strcmp("ENDM", type) == 0) return ENDM;
+  else if(strcmp("IMOK", type) == 0) return IMOK;
+  else if(strcmp("ITEM", type) == 0) return ITEM;
+  else if(strcmp("LAST", type) == 0) return LAST;
+  else if(strcmp("LINB", type) == 0) return LINB;
+  else if(strcmp("LIST", type) == 0) return LIST;
+  else if(strcmp("MESS", type) == 0) return MESS;
+  else if(strcmp("OLDM", type) == 0) return OLDM;
+  else if(strcmp("REGI", type) == 0) return REGI;
+  else if(strcmp("RENO", type) == 0) return RENO;
+  else if(strcmp("REOK", type) == 0) return REOK;
+  else if(strcmp("RUOK", type) == 0) return RUOK;
 
-int count_words(char phrase[]){
-    char delim = ' ';
-    int counter = 0;
-    int len_phrase = strlen(phrase);
-    for(int i = 0; i < len_phrase; i++)
-    {
-        if(phrase[i] == delim && phrase[i-1] != delim && i > 0)
-            counter++;
-    }
-    if(phrase[len_phrase-1] != delim && counter > 0)
-        counter++;
-    return counter;
+  return -1;
 }
 
-enum msg_type get_msg_type(const char *phrase){
-    char type[5];
-    strncpy(type, phrase, 4);
-    type[4] = '\0';
-    if(strcmp("ACKM", type) == 0) return ACKM;
-    else if(strcmp("DIFF", type) == 0) return DIFF;
-    else if(strcmp("ENDM", type) == 0) return ENDM;
-    else if(strcmp("IMOK", type) == 0) return IMOK;
-    else if(strcmp("ITEM", type) == 0) return ITEM;
-    else if(strcmp("LAST", type) == 0) return LAST;
-    else if(strcmp("LINB", type) == 0) return LINB;
-    else if(strcmp("LIST", type) == 0) return LIST;
-    else if(strcmp("MESS", type) == 0) return MESS;
-    else if(strcmp("OLDM", type) == 0) return OLDM;
-    else if(strcmp("REGI", type) == 0) return REGI;
-    else if(strcmp("RENO", type) == 0) return RENO;
-    else if(strcmp("REOK", type) == 0) return REOK;
-    else return RUOK;
-}
-
-size_t msglen (enum msg_type type)
+size_t msglen (msg_type type)
 {
   size_t len = MSG_TYPE_SIZE + MSG_END_SIZE;
   
@@ -67,12 +55,20 @@ size_t msglen (enum msg_type type)
     case LINB:
       return len + MSG_NUM_DIFF_SIZE + 1; // 9
 
-    default: //ACKM, ENDM, IMOK, LIST, RENO, REOK, RUOK
+    case ACKM:
+    case ENDM:
+    case IMOK:
+    case LIST:
+    case RENO:
+    case REOK:
+    case RUOK:
       return len; // 6
-    } 
+    }
+
+  return -1;
 }
 
-const char* msg_type_to_str (enum msg_type type)
+const char* msg_type_to_str (msg_type type)
 {
   switch (type)
     {
@@ -109,7 +105,7 @@ const char* msg_type_to_str (enum msg_type type)
   return NULL;
 }
 
-static void set_msg_type (char *buf, enum msg_type type)
+static void set_msg_type (char *buf, msg_type type)
 {
   strcpy (buf, msg_type_to_str(type));
 }
@@ -161,7 +157,7 @@ static void add_ip_addr (char *buf, struct in_addr *inp)
   buf_end[11] = '.';
 }
 
-char* create_message (char* buf, enum msg_type type, ...)
+char* create_message (char* buf,  msg_type type, ...)
 {
   va_list args;
   char *ret;
@@ -169,6 +165,9 @@ char* create_message (char* buf, enum msg_type type, ...)
 
   
   len = msglen (type);
+  if (len < 0)
+    return NULL;
+
   
   if (buf == NULL)
     {
