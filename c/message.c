@@ -32,7 +32,7 @@ msg_type get_msg_type (const char *msg)
   return -1;
 }
 
-size_t msglen (msg_type type)
+int msglen (msg_type type)
 {
   size_t len = MSG_TYPE_SIZE + MSG_END_SIZE;
   
@@ -157,11 +157,11 @@ static void add_ip_addr (char *buf, struct in_addr *inp)
   buf_end[11] = '.';
 }
 
-char* create_message (char* buf,  msg_type type, ...)
+char* create_message (char* buf, msg_type type, ...)
 {
   va_list args;
   char *ret;
-  size_t len;
+  int len;
 
   
   len = msglen (type);

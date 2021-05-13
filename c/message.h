@@ -31,7 +31,7 @@
 #define LIST_LEN 6
 
 // Types possibles des messages
-typedef uint32_t msg_type;
+typedef int msg_type;
 
 #define ACKM 1
 #define DIFF 2
@@ -51,7 +51,7 @@ typedef uint32_t msg_type;
 /**
  * Donne le taille en octet nécessaire pour stocker un message d'un certain type 
  */
-size_t msglen (msg_type type);
+int msglen (msg_type type);
 
 /**
  * Donne la représentation en string d'un msg_type
