@@ -42,6 +42,7 @@
 *.hex
 manager
 client_keyboard
+scenario_*
 
 # Debug files
 *.dSYM/

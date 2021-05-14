@@ -85,6 +85,7 @@ int send_mess_to_streamer (const char* streamer_ip, int streamer_port, const cha
   adr_sockd.sin_family = AF_INET;
   adr_sockd.sin_port = htons(streamer_port);
   if(inet_aton(streamer_ip, &adr_sockd.sin_addr) == 0){
+    printf("Erreur lors de la création de l'ip...\n");
     return -1;
   }
     
