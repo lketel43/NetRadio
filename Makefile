@@ -23,10 +23,10 @@ TAR_NAME = netradio.tar
 # NE PAS MODIFIER CE QUI EST EN DESSOUS #
 #########################################
 # Compilation des fichiers C et Java
-all: c java scenario
+all: c java
 
 # Nettoyage des fichiers de compilation C et Java et Scenarios
-clean: cleanc cleanj cleans
+clean: cleanc cleanj
 
 # Création du .tar contenant les fichiers .java, .c et Makefile
 tar:
@@ -92,33 +92,33 @@ cleanj:
 #############################
 # COMPILATION DES SCENARIOS #
 #############################
-SCENARIO = $(wildcard scenario_*)
-SCENARIO_DIR = $(addsuffix /,$(SCENARIO))
+# SCENARIO = $(wildcard scenario_*)
+# SCENARIO_DIR = $(addsuffix /,$(SCENARIO))
 
-FIND_JSRC = $(wildcard $(dir)*.java)
-SCENARIO_JCLASS := $(foreach dir,$(SCENARIO_DIR),$(FIND_JSRC:.java=.class))
+# FIND_JSRC = $(wildcard $(dir)*.java)
+# SCENARIO_JCLASS := $(foreach dir,$(SCENARIO_DIR),$(FIND_JSRC:.java=.class))
 
-FIND_CSRC = $(wildcard $(dir)*.c)
-SCENARIO_COBJ := $(foreach dir,$(SCENARIO_DIR),$(FIND_CSRC:.c=.o))
+# FIND_CSRC = $(wildcard $(dir)*.c)
+# SCENARIO_COBJ := $(foreach dir,$(SCENARIO_DIR),$(FIND_CSRC:.c=.o))
 
-SCENARIO_EXEC = $(join $(SCENARIO_DIR),$(SCENARIO))
-
-
-scenario: c java $(SCENARIO_EXEC) $(SCENARIO_JCLASS)
+# SCENARIO_EXEC = $(join $(SCENARIO_DIR),$(SCENARIO))
 
 
-$(SCENARIO_EXEC): $(SCENARIO_COBJ)
-	$(if $(wildcard $(@D)/*.o),\
-		$(CC) -o $@ $(CFLAGS) -I $(CSRC_DIR) $(wildcard $(@D)/*.o))
+# scenario: c java $(SCENARIO_EXEC) $(SCENARIO_JCLASS)
 
-$(SCENARIO_COBJ): %.o: %.c
-	$(CC) -c -o $@ $< $(CFLAGS) -I $(CSRC_DIR)
 
-$(SCENARIO_JCLASS): %.class: %.java
-	$(JC) -d $(@D) -classpath $(JCLASS_DIR):$(@D)/ $(JCFLAGS) $<
+# $(SCENARIO_EXEC): $(SCENARIO_COBJ)
+# 	$(if $(wildcard $(@D)/*.o),\
+# 		$(CC) -o $@ $(CFLAGS) -I $(CSRC_DIR) $(wildcard $(@D)/*.o))
 
-cleans:
-	rm -rf $(SCENARIO_EXEC) $(SCENARIO_JCLASS) $(SCENARIO_COBJ)
+# $(SCENARIO_COBJ): %.o: %.c
+# 	$(CC) -c -o $@ $< $(CFLAGS) -I $(CSRC_DIR)
+
+# $(SCENARIO_JCLASS): %.class: %.java
+# 	$(JC) -d $(@D) -classpath $(JCLASS_DIR):$(@D)/ $(JCFLAGS) $<
+
+# cleans:
+# 	rm -rf $(SCENARIO_EXEC) $(SCENARIO_JCLASS) $(SCENARIO_COBJ)
 
 # .SECONDEXPANSION:
 # $(SCENARIO_EXEC): $$(filter $(dir $$@)/%.o,$(SCENARIO_COBJ))
