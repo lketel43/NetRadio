@@ -1,7 +1,7 @@
 # C
 CSRC_DIR = c/
 COBJ_DIR = cobj/
-CMAIN_NAME = manager client
+CMAIN_NAME = manager client_keyboard
 
 CC	= gcc
 CFLAGS	= -g -Wall -pthread
