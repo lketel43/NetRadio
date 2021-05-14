@@ -53,7 +53,7 @@ $(CMAIN_NAME): %: $(COBJ) $(CSRC_DIR)%.c
 $(COBJ_DIR):
 	@mkdir -p $(COBJ_DIR)
 
-$(COBJ_DIR)%.o: $(CSRC_DIR)%.c | $(COBJ_DIR)
+$(COBJ_DIR)%.o: $(CSRC_DIR)%.c $(CSRC_DIR)%.h | $(COBJ_DIR)
 	$(CC) -c -o $@ $< $(CFLAGS)
 
 # Nettoyage des fichiers de compilation C
