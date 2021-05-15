@@ -36,7 +36,8 @@ public class Message{
         REGI,
         RENO,
         REOK,
-        RUOK
+        RUOK,
+        IMAG
     }
 
     /* */
@@ -70,6 +71,7 @@ public class Message{
             case "RENO" : return MsgType.RENO;
             case "REOK" : return MsgType.REOK;
             case "RUOK" : return MsgType.RUOK;
+            case "IMAG" : return MsgType.IMAG;
             default : throw new IllegalArgumentException("Wrong message format");
         }
     }
