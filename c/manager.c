@@ -29,7 +29,6 @@
 
 /* Nombre maximale de diffuseur que le gestionnaire peut gérer */
 int MAX_REGISTERED_BROADCASTER;
-//#define MAX_REGISTERED_BROADCASTER 2
 
 /* Registre des diffuseurs */
 static char broadcaster_register[100][REGI_LEN+1];
@@ -500,10 +499,12 @@ int main (int argc, char **argv)
       usage (EXIT_FAILURE);
     }
 
-    if(argc == optind+2)
-      MAX_REGISTERED_BROADCASTER = atoi(argv[optind+1]);
-    else 
-      MAX_REGISTERED_BROADCASTER = 100;
+    unsigned int nb_diff;
+    if(! set_uint_from_string(argv[optind+1], &nb_diff) || check_delay > 99){
+      fprintf (stderr, "Nb de diffuseurs à gérer doit etre <= 100.\n");
+	    usage (EXIT_FAILURE);
+    }
+    MAX_REGISTERED_BROADCASTER = nb_diff;
 
   sockfd = init_manager (&address, port);
   
@@ -530,14 +531,15 @@ static void usage (int exit_status)
     fprintf (stderr, "Saisissez \"%s -h\" pour plus d'informations.\n", PROGRAM_NAME);
   else
     {
-      printf ("Usage: %s [OPTION]... PORT\n", PROGRAM_NAME);
+      printf ("Usage: %s [OPTION]... PORT NB_DIFF_MAX\n", PROGRAM_NAME);
       fputs ("Lance le gestionnaire écoutant sur PORT\n\n", stdout);
 
       printf ("\
   -h                 affiche cette aide.\n\
   -v                 active le mode verbeux.\n\
   -d TEMPS           fais attendre le gestionnaire TEMPS secondes entre chaque envoi de RUOK;\n\
-	             la valeur par défaut est 30 secondes. Il faut que 0 <= TEMPS <= 86400 (=1 jour)\n");
+	             la valeur par défaut est 30 secondes. Il faut que 0 <= TEMPS <= 86400 (=1 jour)\n\
+  0 < NB_DIFF_MAX < 100\n\n");
     }
   
   exit (exit_status);
