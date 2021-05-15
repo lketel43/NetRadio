@@ -500,8 +500,8 @@ int main (int argc, char **argv)
     }
 
     unsigned int nb_diff;
-    if(! set_uint_from_string(argv[optind+1], &nb_diff) || check_delay > 99){
-      fprintf (stderr, "Nb de diffuseurs à gérer doit etre <= 100.\n");
+    if(! set_uint_from_string(argv[optind+1], &nb_diff) || nb_diff > 99 || nb_diff < 1){
+      fprintf (stderr, "Nb de diffuseurs à gérer doit etre compris entre 0 et 100.\n");
 	    usage (EXIT_FAILURE);
     }
     MAX_REGISTERED_BROADCASTER = nb_diff;
@@ -514,8 +514,9 @@ int main (int argc, char **argv)
   if (verbose)
     {
       printf ("Lancement du gestionnaire\n");
-      printf ("- Port gestionnaire : %d\n", port);
-      printf ("- Délai d'attente   : %us\n", check_delay);
+      printf ("- Port gestionnaire        : %d\n", port);
+      printf ("- Délai d'attente          : %us\n", check_delay);
+      printf ("- Nombre de diffuseurs max : %u\n", nb_diff);
     }
   
   r = start_manager (sockfd);
