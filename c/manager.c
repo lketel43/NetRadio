@@ -28,11 +28,11 @@
 #define PROGRAM_NAME "manager"
 
 /* Nombre maximale de diffuseur que le gestionnaire peut gérer */
-#define MAX_REGISTERED_BROADCASTER 100
-
+int MAX_REGISTERED_BROADCASTER;
+//#define MAX_REGISTERED_BROADCASTER 2
 
 /* Registre des diffuseurs */
-static char broadcaster_register[MAX_REGISTERED_BROADCASTER][REGI_LEN+1];
+static char broadcaster_register[100][REGI_LEN+1];
 
 /* Mutex pour accéder au registre des diffuseurs */
 static pthread_mutex_t register_mutex = PTHREAD_MUTEX_INITIALIZER;
@@ -487,7 +487,7 @@ int main (int argc, char **argv)
 	}
     }
 
-  if (optind != argc - 1)
+  if (optind != argc - 2)
     {
       fprintf (stderr, "Mauvais nombre d'argument(s)\n");
       usage (EXIT_FAILURE);
@@ -499,7 +499,12 @@ int main (int argc, char **argv)
       fprintf (stderr, "Erreur dans le n° de port\n");
       usage (EXIT_FAILURE);
     }
-  
+
+    if(argc == optind+2)
+      MAX_REGISTERED_BROADCASTER = atoi(argv[optind+1]);
+    else 
+      MAX_REGISTERED_BROADCASTER = 100;
+
   sockfd = init_manager (&address, port);
   
   if (sockfd < 0)

@@ -41,6 +41,7 @@ public class ManagerService implements Runnable{
                 socket.close();
                 reader.close();
                 writer.close();
+                System.out.println("La connexion au gestionnaire (adresse : " + addr + ", port : " + this.portManager + ") n'est pas possible.\n");
             }
             else System.out.println("ERROR");
         }
