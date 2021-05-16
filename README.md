@@ -36,14 +36,16 @@ Pour lancer un diffuseur grâce à des fichiers faire ``java Streamer file1 file
 ``file2`` contient les messages que l'on souhaite diffuser. La première ligne de ce fichier doit être l'id de l'auteur du message. Ensuite, chaque ligne contient un message.
 
 ### Gestionnaire
-Le gestionnaire se lance ainsi : `./manager [OPTION]... PORT`
+Le gestionnaire se lance ainsi : `./manager [OPTION]... PORT [NB_DIFF]`
 - `PORT` est le n° du port sur lequel le gestionnaire écoute les connexions entrantes
 - `[OPTION]...` les options pour le gestionnaire
    - `-h` affiche l'aide
    - `-v` active le mode verbeux
    - `-d TEMPS` fais attendre le gestionnaire *TEMPS* secondes entre chaque envoi de *RUOK*; la valeur par défaut est 30 secondes.
+   - `NB_DIFF` peut être précisé ou pas. S'il ne l'est pas le gestionnaire 
+    gérera au plus 100 diffuseurs. S'il est précisé il gérera au plus NB_DIFF diffuseurs où NB_DIFF < 100.
 
-Par exemple, la commande `./manager -v -d 5 5000` lance un gestionnaire en mode verbeux sur le port 5000, il testera la présence d'un diffuseur toutes les 5 secondes 
+Par exemple, la commande `./manager -v -d 5 5000 23` lance un gestionnaire en mode verbeux sur le port 5000, il testera la présence d'un diffuseur toutes les 5 secondes, et a au plus 23 diffuseur à gérer.  
 
 
 ### Clients
