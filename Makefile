@@ -16,7 +16,7 @@ JC = javac
 JCFLAGS = -Xlint:all
 
 # TAR
-TAR_NAME = netradio.tar
+TAR_NAME = PR-projet-groupe7.tar
 
 
 #########################################
