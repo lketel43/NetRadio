@@ -281,7 +281,7 @@ public class Streamer{
 
 
 
-    public static void startStream(Streamer stream, String managerAddress, int managerPort){
+    public static void startStream(Streamer stream, String managerAddress, int managerPort, boolean castImages){
         MulticastService mService = new MulticastService(stream);
         Thread mThread = new Thread(mService);
         mThread.start();
@@ -290,9 +290,11 @@ public class Streamer{
             Thread rThread = new Thread(manService);
             rThread.start();
         }
-        ImageMulticastService imService = new ImageMulticastService(stream);
-        Thread imThread = new Thread(imService);
-        imThread.start();
+        if(stream.getNbImages() > 0 && castImages){
+            ImageMulticastService imService = new ImageMulticastService(stream);
+            Thread imThread = new Thread(imService);
+            imThread.start();
+        }
         try{
             ServerSocket server = new ServerSocket(stream.recvPort);
             while(true){
@@ -325,7 +327,7 @@ public class Streamer{
             s.addImage("./images/im2.png");
             s.addImage("./images/im3.png");
             s.addImage("./images/im4.png");
-            startStream(s, null, -1);
+            startStream(s, null, -1, true);
         }
         else if(args.length == 5){
             Streamer s = new Streamer(args[0], Integer.parseInt(args[1]), args[2], Integer.parseInt(args[3]), Integer.parseInt(args[4]));
@@ -333,7 +335,7 @@ public class Streamer{
             s.addMess("second message", args[0]);
             s.addMess("third message", args[0]);
             s.addMess("forth message", args[0]);
-            startStream(s, null, -1);
+            startStream(s, null, -1, false);
         }
         else if(args.length == 7){
             Streamer s = new Streamer(args[0], Integer.parseInt(args[1]), args[2], Integer.parseInt(args[3]), Integer.parseInt(args[4]));
@@ -341,12 +343,12 @@ public class Streamer{
             s.addMess("second message", args[0]);
             s.addMess("third message", args[0]);
             s.addMess("forth message", args[0]);
-            startStream(s, args[5], Integer.parseInt(args[6]));
+            startStream(s, args[5], Integer.parseInt(args[6]), false);
         }
         else if(args.length == 2){
             Streamer s = StreamFile.initStreamerFromFile(args[0]);
             StreamFile.addMessFromFile(s, args[1]);
-            startStream(s, null, -1);
+            startStream(s, null, -1, false);
         }
         else System.out.println("Wrong options");
     }
