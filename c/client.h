@@ -1,5 +1,4 @@
-/* client.h -- communication du client avec les autres entités
- */
+/* client.h -- communication du client avec les autres entités */
 
 #ifndef CLIENT_H
 #define CLIENT_H

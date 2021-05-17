@@ -26,8 +26,11 @@
 #define SEPARATOR_CHAR ' '
 
 // Taille des messages
+#define ACKM_LEN 6
 #define REGI_LEN 57
+#define LAST_LEN 10
 #define LIST_LEN 6
+#define MESS_LEN 156
 
 // Types possibles des messages
 enum msg_type
