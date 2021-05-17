@@ -28,11 +28,10 @@
 #define PROGRAM_NAME "manager"
 
 /* Nombre maximale de diffuseur que le gestionnaire peut gérer */
-#define MAX_REGISTERED_BROADCASTER 100
-
+int MAX_REGISTERED_BROADCASTER;
 
 /* Registre des diffuseurs */
-static char broadcaster_register[MAX_REGISTERED_BROADCASTER][REGI_LEN+1];
+static char broadcaster_register[100][REGI_LEN+1];
 
 /* Mutex pour accéder au registre des diffuseurs */
 static pthread_mutex_t register_mutex = PTHREAD_MUTEX_INITIALIZER;
@@ -487,7 +486,7 @@ int main (int argc, char **argv)
 	}
     }
 
-  if (optind != argc - 1)
+  if (optind != argc - 2)
     {
       fprintf (stderr, "Mauvais nombre d'argument(s)\n");
       usage (EXIT_FAILURE);
@@ -499,7 +498,14 @@ int main (int argc, char **argv)
       fprintf (stderr, "Erreur dans le n° de port\n");
       usage (EXIT_FAILURE);
     }
-  
+
+    unsigned int nb_diff;
+    if(! set_uint_from_string(argv[optind+1], &nb_diff) || nb_diff > 99 || nb_diff < 1){
+      fprintf (stderr, "Nb de diffuseurs à gérer doit etre compris entre 0 et 100.\n");
+	    usage (EXIT_FAILURE);
+    }
+    MAX_REGISTERED_BROADCASTER = nb_diff;
+
   sockfd = init_manager (&address, port);
   
   if (sockfd < 0)
@@ -508,8 +514,9 @@ int main (int argc, char **argv)
   if (verbose)
     {
       printf ("Lancement du gestionnaire\n");
-      printf ("- Port gestionnaire : %d\n", port);
-      printf ("- Délai d'attente   : %us\n", check_delay);
+      printf ("- Port gestionnaire        : %d\n", port);
+      printf ("- Délai d'attente          : %us\n", check_delay);
+      printf ("- Nombre de diffuseurs max : %u\n", nb_diff);
     }
   
   r = start_manager (sockfd);
@@ -525,14 +532,15 @@ static void usage (int exit_status)
     fprintf (stderr, "Saisissez \"%s -h\" pour plus d'informations.\n", PROGRAM_NAME);
   else
     {
-      printf ("Usage: %s [OPTION]... PORT\n", PROGRAM_NAME);
+      printf ("Usage: %s [OPTION]... PORT NB_DIFF_MAX\n", PROGRAM_NAME);
       fputs ("Lance le gestionnaire écoutant sur PORT\n\n", stdout);
 
       printf ("\
   -h                 affiche cette aide.\n\
   -v                 active le mode verbeux.\n\
   -d TEMPS           fais attendre le gestionnaire TEMPS secondes entre chaque envoi de RUOK;\n\
-	             la valeur par défaut est 30 secondes. Il faut que 0 <= TEMPS <= 86400 (=1 jour)\n");
+	             la valeur par défaut est 30 secondes. Il faut que 0 <= TEMPS <= 86400 (=1 jour)\n\
+  0 < NB_DIFF_MAX < 100\n\n");
     }
   
   exit (exit_status);

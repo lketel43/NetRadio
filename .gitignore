@@ -41,9 +41,9 @@
 *.x86_64
 *.hex
 manager
-client
-scenario_0/scenario_0
-src/
+client_keyboard
+scenario_*
+message_test
 
 # Debug files
 *.dSYM/
