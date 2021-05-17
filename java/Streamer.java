@@ -1,8 +1,6 @@
 import java.io.*;
 import java.net.*;
 import java.util.*;
-import java.awt.image.BufferedImage;
-import javax.imageio.ImageIO;
 
 public class Streamer{
 
@@ -20,12 +18,6 @@ public class Streamer{
     private ArrayList<String> IDs = new ArrayList<String>();
     private int current = 0;
     private int num = 0;
-
-    private ArrayList<byte[]> images = new ArrayList<byte[]>();
-    private int currentImage = 0;
-    private int imageFrequency = 5000;
-    public String multiCastAddrImages = "225.0.0.1";
-    public int multiCastPortImages = 5002;
 
     private byte[][] lastStreamed = new byte[1000][SIZE_DIFF_MESS];
     private int lastSend = 0;
@@ -99,22 +91,6 @@ public class Streamer{
 
     public ArrayList<String> getIDs(){
         return this.IDs;
-    }
-
-    public ArrayList<byte[]> getImages(){
-        return this.images;
-    }
-
-    public int getCurrentImage(){
-        return this.currentImage;
-    }
-
-    public void setCurrentImage(int n){
-        this.currentImage = n;
-    }
-
-    public int getImageFrequency(){
-        return this.imageFrequency;
     }
 
     /***********************
@@ -248,35 +224,6 @@ public class Streamer{
     **************************************/
 
 
-    /*****************************
-    * Functions to manage images *
-    *****************************/
-
-    public int getNbImages(){
-        return this.images.size();
-    }
-
-    public byte[] getImage(int c){
-        return this.images.get(c);
-    }
-
-    public void addImage(String imgPath){
-        try{
-            BufferedImage image = ImageIO.read(new File(imgPath));
-            ByteArrayOutputStream baos = new ByteArrayOutputStream();
-            ImageIO.write(image, "png", baos);
-            baos.flush();
-            byte[] buffer = baos.toByteArray();
-            this.images.add(buffer);
-        }
-        catch(Exception e){
-            e.printStackTrace();
-        }
-    }
-
-    /*********************************
-    * End Functions to manage images *
-    *********************************/
 
 
 
@@ -290,9 +237,6 @@ public class Streamer{
             Thread rThread = new Thread(manService);
             rThread.start();
         }
-        ImageMulticastService imService = new ImageMulticastService(stream);
-        Thread imThread = new Thread(imService);
-        imThread.start();
         try{
             ServerSocket server = new ServerSocket(stream.recvPort);
             while(true){
@@ -320,11 +264,6 @@ public class Streamer{
             s.addMess("second message", defID);
             s.addMess("third message", defID);
             s.addMess("forth message", defID);
-            s.addImage("./images/i.png");
-            s.addImage("./images/icon.png");
-            s.addImage("./images/im2.png");
-            s.addImage("./images/im3.png");
-            s.addImage("./images/im4.png");
             startStream(s, null, -1);
         }
         else if(args.length == 5){

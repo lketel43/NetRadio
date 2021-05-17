@@ -10,9 +10,6 @@ public class JavaClient{
         ClientReceiveMulticast recv = new ClientReceiveMulticast(multiCastAddr, multiCastPort);
         Thread thread = new Thread(recv);
         thread.start();
-        ClientReceiveImagesMulticast imRecv = new ClientReceiveImagesMulticast("225.0.0.1", 5002);
-        Thread imThread = new Thread(imRecv);
-        imThread.start();
         try{
             Socket socket = new Socket(address, port);
             BufferedReader reader = new BufferedReader(new InputStreamReader(socket.getInputStream()));
