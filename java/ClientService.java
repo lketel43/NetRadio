@@ -50,10 +50,6 @@ public class ClientService implements Runnable{
                         socket.close();
                         break;
                     }
-                case IMAG :
-                    synchronized(this.stream){
-                        
-                    }
                 default : System.out.println("Message incorrect");
             }
         }

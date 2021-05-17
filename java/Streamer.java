@@ -320,11 +320,11 @@ public class Streamer{
             s.addMess("second message", defID);
             s.addMess("third message", defID);
             s.addMess("forth message", defID);
-            s.addImage("./i.png");
-            s.addImage("./icon.png");
-            s.addImage("./im2.png");
-            s.addImage("./im3.png");
-            s.addImage("./im4.png");
+            s.addImage("./images/i.png");
+            s.addImage("./images/icon.png");
+            s.addImage("./images/im2.png");
+            s.addImage("./images/im3.png");
+            s.addImage("./images/im4.png");
             startStream(s, null, -1);
         }
         else if(args.length == 5){
