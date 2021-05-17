@@ -1,6 +1,8 @@
 import java.io.*;
 import java.net.*;
 import java.util.*;
+import java.awt.image.BufferedImage;
+import javax.imageio.ImageIO;
 
 public class Streamer{
 
@@ -18,6 +20,12 @@ public class Streamer{
     private ArrayList<String> IDs = new ArrayList<String>();
     private int current = 0;
     private int num = 0;
+
+    private ArrayList<byte[]> images = new ArrayList<byte[]>();
+    private int currentImage = 0;
+    private int imageFrequency = 5000;
+    public String multiCastAddrImages = "225.0.0.1";
+    public int multiCastPortImages = 5002;
 
     private byte[][] lastStreamed = new byte[1000][SIZE_DIFF_MESS];
     private int lastSend = 0;
@@ -91,6 +99,22 @@ public class Streamer{
 
     public ArrayList<String> getIDs(){
         return this.IDs;
+    }
+
+    public ArrayList<byte[]> getImages(){
+        return this.images;
+    }
+
+    public int getCurrentImage(){
+        return this.currentImage;
+    }
+
+    public void setCurrentImage(int n){
+        this.currentImage = n;
+    }
+
+    public int getImageFrequency(){
+        return this.imageFrequency;
     }
 
     /***********************
@@ -223,12 +247,39 @@ public class Streamer{
     *End functions to display informations*
     **************************************/
 
+     /*****************************
+    * Functions to manage images *
+    *****************************/
+
+    public int getNbImages(){
+        return this.images.size();
+    }
+
+    public byte[] getImage(int c){
+        return this.images.get(c);
+    }
+
+    public void addImage(String imgPath){
+        try{
+            BufferedImage image = ImageIO.read(new File(imgPath));
+            ByteArrayOutputStream baos = new ByteArrayOutputStream();
+            ImageIO.write(image, "png", baos);
+            baos.flush();
+            byte[] buffer = baos.toByteArray();
+            this.images.add(buffer);
+        }
+        catch(Exception e){
+            e.printStackTrace();
+        }
+    }
+
+    /*********************************
+    * End Functions to manage images *
+    *********************************/
 
 
 
-
-
-    public static void startStream(Streamer stream, String managerAddress, int managerPort){
+    public static void startStream(Streamer stream, String managerAddress, int managerPort, boolean castImages){
         MulticastService mService = new MulticastService(stream);
         Thread mThread = new Thread(mService);
         mThread.start();
@@ -236,6 +287,11 @@ public class Streamer{
             ManagerService manService = new ManagerService(stream, managerPort, managerAddress);
             Thread rThread = new Thread(manService);
             rThread.start();
+        }
+        if(stream.getNbImages() > 0 && castImages){
+            ImageMulticastService imService = new ImageMulticastService(stream);
+            Thread imThread = new Thread(imService);
+            imThread.start();
         }
         try{
             ServerSocket server = new ServerSocket(stream.recvPort);
@@ -264,7 +320,12 @@ public class Streamer{
             s.addMess("second message", defID);
             s.addMess("third message", defID);
             s.addMess("forth message", defID);
-            startStream(s, null, -1);
+            s.addImage("./java/images/i.png");
+            s.addImage("./java/images/icon.png");
+            s.addImage("./java/images/im2.png");
+            s.addImage("./java/images/im3.png");
+            s.addImage("./java/images/im4.png");
+            startStream(s, null, -1, true);
         }
         else if(args.length == 5){
             Streamer s = new Streamer(args[0], Integer.parseInt(args[1]), args[2], Integer.parseInt(args[3]), Integer.parseInt(args[4]));
@@ -272,7 +333,7 @@ public class Streamer{
             s.addMess("second message", args[0]);
             s.addMess("third message", args[0]);
             s.addMess("forth message", args[0]);
-            startStream(s, null, -1);
+            startStream(s, null, -1, false);
         }
         else if(args.length == 7){
             Streamer s = new Streamer(args[0], Integer.parseInt(args[1]), args[2], Integer.parseInt(args[3]), Integer.parseInt(args[4]));
@@ -280,12 +341,12 @@ public class Streamer{
             s.addMess("second message", args[0]);
             s.addMess("third message", args[0]);
             s.addMess("forth message", args[0]);
-            startStream(s, args[5], Integer.parseInt(args[6]));
+            startStream(s, args[5], Integer.parseInt(args[6]), false);
         }
         else if(args.length == 2){
             Streamer s = StreamFile.initStreamerFromFile(args[0]);
             StreamFile.addMessFromFile(s, args[1]);
-            startStream(s, null, -1);
+            startStream(s, null, -1, false);
         }
         else System.out.println("Wrong options");
     }
