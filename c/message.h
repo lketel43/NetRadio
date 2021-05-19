@@ -1,11 +1,11 @@
-/* message.h -- manipulation des messages
- */
+/* message.h -- manipulation des messages */
 
 #ifndef MESSAGE_H
 #define MESSAGE_H
 
-#include <stddef.h>
 #include <stdarg.h>
+#include <stdbool.h>
+#include <stddef.h>
 #include <stdint.h>
 
 // Taille des caracteristiques d'un message en octets
@@ -27,9 +27,12 @@
 #define SEPARATOR_CHAR ' '
 
 // Taille des messages
+#define MAX_MSG_SIZE 161
+
 #define ACKM_LEN 6
 #define REGI_LEN 57
 #define LAST_LEN 10
+#define LINB_LEN 9
 #define LIST_LEN 6
 #define MESS_LEN 156
 
@@ -82,7 +85,11 @@ char* create_message (char* buf, msg_type type, ...);
  * 
  * On entre un message en paramètre commencant par l'un des 14 types.
 */
-msg_type get_msg_type(const char *msg);
+msg_type get_msg_type (const char *msg);
 
+/**
+ * Vérifie si un message est au bon format
+ */
+bool verify_msg (const char *msg);
 
 #endif

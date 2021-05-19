@@ -3,6 +3,7 @@
 #include <arpa/inet.h>
 
 #include <assert.h>
+#include <ctype.h>
 #include <stdlib.h>
 #include <string.h>
 #include <stdio.h>
@@ -10,9 +11,9 @@
 
 msg_type get_msg_type (const char *msg)
 {
-  char type[5];
-  strncpy (type, msg, 4);
-  type[4] = '\0';
+  char type[MSG_TYPE_SIZE + 1];
+  strncpy (type, msg, MSG_TYPE_SIZE);
+  type[MSG_TYPE_SIZE] = '\0';
   
   if     (strcmp("ACKM", type) == 0) return ACKM;
   else if(strcmp("DIFF", type) == 0) return DIFF;
@@ -237,4 +238,105 @@ char* create_message (char* buf, msg_type type, ...)
   add_msg_end (ret);
   
   return ret;
+}
+
+static bool verify_int (const char *msg, int width)
+{
+  if (!msg)
+    return false;
+  
+  for (int i=0; i < width; i++)
+    {
+      if (!isdigit(msg[i]))
+	return false;
+    }
+  
+  return true;
+}
+
+static bool verify_separator (const char *msg)
+{
+  return msg && msg[0] == SEPARATOR_CHAR;
+}
+
+static bool verify_end (const char *msg)
+{
+  return msg && msg[0] == MSG_END[0] && msg[1] == MSG_END[1];
+}
+
+static bool verify_ip_addr (const char *msg)
+{
+  return msg
+    && verify_int(msg, 3)
+    && msg[3] == '.'
+    && verify_int(msg + 4, 3)
+    && msg[7] == '.'
+    && verify_int(msg + 8, 3)
+    && msg[11] == '.'
+    && verify_int(msg + 12, 3);  
+}
+
+bool verify_msg (const char *msg)
+{
+  msg_type type = get_msg_type (msg);
+  size_t len = strlen(msg);
+  if (type < 0 || len < 6 || len > MAX_MSG_SIZE)
+    return false;    
+    
+  switch (type)
+    {
+    case DIFF:
+    case OLDM:
+      return len == msglen(DIFF)
+	&& verify_separator (msg + MSG_TYPE_SIZE)
+	&& verify_int (msg + MSG_TYPE_SIZE + 1, MSG_NUM_MESS_SIZE)
+	&& verify_separator (msg + MSG_TYPE_SIZE + 1 + MSG_NUM_MESS_SIZE)
+	&& verify_separator (msg + MSG_TYPE_SIZE + 2 + MSG_NUM_MESS_SIZE + MSG_MESS_SIZE)
+	&& verify_end (msg + MSG_TYPE_SIZE + MSG_NUM_MESS_SIZE + MSG_ID_SIZE + MSG_MESS_SIZE + 3);
+	
+    case MESS:
+      return len == msglen(MESS)
+	&& verify_separator (msg + MSG_TYPE_SIZE)
+	&& verify_separator (msg + MSG_TYPE_SIZE + 1 + MSG_ID_SIZE)
+	&& verify_end (msg + MSG_TYPE_SIZE + MSG_ID_SIZE + MSG_MESS_SIZE + 2);
+      
+    case ITEM:
+    case REGI:
+      return len == msglen(ITEM)
+	&& verify_separator (msg + MSG_TYPE_SIZE)
+	&& verify_separator (msg + MSG_TYPE_SIZE + 1 + MSG_ID_SIZE)
+	&& verify_ip_addr   (msg + MSG_TYPE_SIZE + 2 + MSG_ID_SIZE)
+	&& verify_separator (msg + MSG_TYPE_SIZE + 2 + MSG_ID_SIZE + MSG_IP_SIZE)
+	&& verify_int       (msg + MSG_TYPE_SIZE + 3 + MSG_ID_SIZE + MSG_IP_SIZE, MSG_PORT_SIZE)
+	&& verify_separator (msg + MSG_TYPE_SIZE + 3 + MSG_ID_SIZE + MSG_IP_SIZE + MSG_PORT_SIZE)
+	&& verify_ip_addr   (msg + MSG_TYPE_SIZE + 4 + MSG_ID_SIZE + MSG_IP_SIZE + MSG_PORT_SIZE)
+	&& verify_separator (msg + MSG_TYPE_SIZE + 4 + MSG_ID_SIZE + 2*MSG_IP_SIZE + MSG_PORT_SIZE)
+	&& verify_int       (msg + MSG_TYPE_SIZE + 5 + MSG_ID_SIZE + 2*MSG_IP_SIZE + MSG_PORT_SIZE, MSG_PORT_SIZE)
+	&& verify_end       (msg + MSG_TYPE_SIZE + 5 + MSG_ID_SIZE + 2*MSG_IP_SIZE + 2*MSG_PORT_SIZE);
+
+    case LAST:
+      return len == msglen(LAST)
+	&& verify_separator (msg + MSG_TYPE_SIZE)
+	&& verify_int (msg + MSG_TYPE_SIZE + 1, MSG_NB_MESS_SIZE)
+	&& verify_end (msg + MSG_TYPE_SIZE + 1 + MSG_NB_MESS_SIZE);
+
+    case LINB:      
+      return len == msglen(LINB)
+	&& verify_separator (msg + MSG_TYPE_SIZE)
+	&& verify_int (msg + MSG_TYPE_SIZE + 1, MSG_NUM_DIFF_SIZE)
+	&& verify_end (msg + MSG_TYPE_SIZE + 1 + MSG_NUM_DIFF_SIZE);
+      
+      
+    case ACKM:
+    case ENDM:
+    case IMOK:
+    case LIST:
+    case RENO:
+    case REOK:
+    case RUOK:      
+      return len == msglen(ACKM)
+	&& verify_end (msg + MSG_TYPE_SIZE);
+    }
+
+  return false;
 }

@@ -67,11 +67,37 @@ static char *test_create_message ()
   return NULL;
 }
 
+static char *test_verify_message ()
+{
+  mu_assert("verify_msg(\"LUCA\\r\\n\")", !verify_msg("LUCA\r\n"));
+ 
+  mu_assert("!verify_msg(\"ACKM\\r\\n\")", verify_msg("ACKM\r\n"));
+  mu_assert("verify_msg(\"ACKM\\t\\n\")", !verify_msg("ACKM\t\n"));
+
+  mu_assert("!verify_msg(\"LINB 00\\r\\n\")", verify_msg("LINB 00\r\n"));
+  mu_assert("verify_msg(\"LINB 151\\r\\n\")", !verify_msg("LINB 151\r\n"));
+  mu_assert("verify_msg(\"LINB_15\\r\\n\")", !verify_msg("LINB_15\r\n"));
+  mu_assert("verify_msg(\"LINB 1a\\r\\n\")", !verify_msg("LINB 1a\r\n"));
+  
+  mu_assert("!verify_msg(\"LAST 151\\r\\n\")", verify_msg("LAST 151\r\n"));
+  mu_assert("verify_msg(\"LAST 15\\r\\n\")", !verify_msg("LAST 15\r\n"));
+  
+  mu_assert("verify_msg(\"MESS lucasgan Lucas Ketels est un petit original gangster\\r\\n\")", !verify_msg("MESS lucasgan Lucas Ketels est un petit original gangster\r\n"));
+  mu_assert("Error: MESS is not accepted", verify_msg("MESS lucasgan Lucas Ketels est un gangster!###############################################################################################################\r\n"));
+  
+  mu_assert("!verify_msg(\"REGI myStream 127.000.000.001 1234 255.255.255.255 5678\\r\\n\")", verify_msg("REGI myStream 127.000.000.001 1234 255.255.255.255 5678\r\n"));
+  mu_assert("verify_msg(\"REGI myStream 127.000.000.001 1234 0.0.0.0 5678\\r\\n\")", !verify_msg("REGI myStream 127.000.000.001 1234 0.0.0.0 5678\r\n"));  
+
+  
+  return NULL;
+}
+  
 
 static char *all_tests()
 {
   mu_run_test (test_msglen);
   mu_run_test (test_create_message);
+  mu_run_test (test_verify_message);
   
   return 0;
 }
