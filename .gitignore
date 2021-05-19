@@ -43,6 +43,7 @@
 manager
 client_keyboard
 scenario_*
+message_test
 
 # Debug files
 *.dSYM/

@@ -283,7 +283,7 @@ static void* handle_connection (void *arg)
 {
   int clientsockfd, r;
   char msg_buf[BUFSIZE];
-  enum msg_type type;
+  msg_type type;
 
   
   clientsockfd = *(int*)arg;

@@ -1,11 +1,12 @@
-/* message.h -- manipulation des messages
- */
+/* message.h -- manipulation des messages */
 
 #ifndef MESSAGE_H
 #define MESSAGE_H
 
-#include <stddef.h>
 #include <stdarg.h>
+#include <stdbool.h>
+#include <stddef.h>
+#include <stdint.h>
 
 // Taille des caracteristiques d'un message en octets
 #define MSG_ID_SIZE 8
@@ -26,40 +27,42 @@
 #define SEPARATOR_CHAR ' '
 
 // Taille des messages
+#define MAX_MSG_SIZE 161
+
 #define ACKM_LEN 6
 #define REGI_LEN 57
 #define LAST_LEN 10
+#define LINB_LEN 9
 #define LIST_LEN 6
 #define MESS_LEN 156
 
 // Types possibles des messages
-enum msg_type
-  {
-    ACKM,
-    DIFF,
-    ENDM,
-    IMOK,
-    ITEM,
-    LAST,
-    LINB,
-    LIST,
-    MESS,
-    OLDM,
-    REGI,
-    RENO,
-    REOK,
-    RUOK
-  };
+typedef int msg_type;
+
+#define ACKM 1
+#define DIFF 2
+#define ENDM 3
+#define IMOK 4
+#define ITEM 5
+#define LAST 6
+#define LINB 7
+#define LIST 8
+#define MESS 9
+#define OLDM 10
+#define REGI 11
+#define RENO 12 
+#define REOK 13 
+#define RUOK 14
 
 /**
  * Donne le taille en octet nécessaire pour stocker un message d'un certain type 
  */
-size_t msglen (enum msg_type type);
+int msglen (msg_type type);
 
 /**
  * Donne la représentation en string d'un msg_type
  */
-const char* msg_type_to_str (enum msg_type type);
+const char* msg_type_to_str (msg_type type);
 
 /**
  * Crée un message avec ses caractéristiques
@@ -75,14 +78,18 @@ const char* msg_type_to_str (enum msg_type type);
  *
  * Attention, `buf` doit être assez grand pour contenir le message + le caractère '\0'
  */
-char* create_message (char* buf, enum msg_type type, ...);
+char* create_message (char* buf, msg_type type, ...);
 
 /**
  * Donne le type de message d'un message
  * 
  * On entre un message en paramètre commencant par l'un des 14 types.
 */
-enum msg_type get_msg_type(const char *phrase);
+msg_type get_msg_type (const char *msg);
 
+/**
+ * Vérifie si un message est au bon format
+ */
+bool verify_msg (const char *msg);
 
 #endif

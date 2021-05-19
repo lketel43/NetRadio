@@ -59,7 +59,7 @@ char** get_streamer_list (const char *manager_ip, int manager_port, int *size)
     }
   buf[r] = '\0';
   
-  enum msg_type type = get_msg_type(buf);
+  msg_type type = get_msg_type(buf);
   char numdi[3];
   if(type == LINB)
     {
@@ -85,7 +85,7 @@ char** get_streamer_list (const char *manager_ip, int manager_port, int *size)
 	}
       list_diff[i][r] = '\0';
 
-      enum msg_type type = get_msg_type(list_diff[i]);
+      msg_type type = get_msg_type(list_diff[i]);
       if(type != ITEM)
 	{
 	  return NULL;
@@ -139,7 +139,7 @@ int send_mess_to_streamer (const char* streamer_ip, int streamer_port, const cha
       return -1;
     }
 
-  enum msg_type type_buf = get_msg_type(ackm);
+  msg_type type_buf = get_msg_type(ackm);
   if (type_buf != ACKM)
     {      
       return -1;
@@ -193,7 +193,7 @@ char** get_last_mess (const char* streamer_ip, int streamer_port, int *nb_mess)
       r = recv(sockd, last_mess[i], msglen(OLDM), 0);
       last_mess[i][r] = '\0';
 
-      enum msg_type type_buf = get_msg_type(last_mess[i]);
+      msg_type type_buf = get_msg_type(last_mess[i]);
       if(type_buf == ENDM)
 	{
 	  free(last_mess[i]);

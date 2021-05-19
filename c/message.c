@@ -3,48 +3,37 @@
 #include <arpa/inet.h>
 
 #include <assert.h>
+#include <ctype.h>
 #include <stdlib.h>
 #include <string.h>
 #include <stdio.h>
 
-//We just need strtok to split the message, with the delim ' '
 
+msg_type get_msg_type (const char *msg)
+{
+  char type[MSG_TYPE_SIZE + 1];
+  strncpy (type, msg, MSG_TYPE_SIZE);
+  type[MSG_TYPE_SIZE] = '\0';
+  
+  if     (strcmp("ACKM", type) == 0) return ACKM;
+  else if(strcmp("DIFF", type) == 0) return DIFF;
+  else if(strcmp("ENDM", type) == 0) return ENDM;
+  else if(strcmp("IMOK", type) == 0) return IMOK;
+  else if(strcmp("ITEM", type) == 0) return ITEM;
+  else if(strcmp("LAST", type) == 0) return LAST;
+  else if(strcmp("LINB", type) == 0) return LINB;
+  else if(strcmp("LIST", type) == 0) return LIST;
+  else if(strcmp("MESS", type) == 0) return MESS;
+  else if(strcmp("OLDM", type) == 0) return OLDM;
+  else if(strcmp("REGI", type) == 0) return REGI;
+  else if(strcmp("RENO", type) == 0) return RENO;
+  else if(strcmp("REOK", type) == 0) return REOK;
+  else if(strcmp("RUOK", type) == 0) return RUOK;
 
-int count_words(char phrase[]){
-    char delim = ' ';
-    int counter = 0;
-    int len_phrase = strlen(phrase);
-    for(int i = 0; i < len_phrase; i++)
-    {
-        if(phrase[i] == delim && phrase[i-1] != delim && i > 0)
-            counter++;
-    }
-    if(phrase[len_phrase-1] != delim && counter > 0)
-        counter++;
-    return counter;
+  return -1;
 }
 
-enum msg_type get_msg_type(const char *phrase){
-    char type[5];
-    strncpy(type, phrase, 4);
-    type[4] = '\0';
-    if(strcmp("ACKM", type) == 0) return ACKM;
-    else if(strcmp("DIFF", type) == 0) return DIFF;
-    else if(strcmp("ENDM", type) == 0) return ENDM;
-    else if(strcmp("IMOK", type) == 0) return IMOK;
-    else if(strcmp("ITEM", type) == 0) return ITEM;
-    else if(strcmp("LAST", type) == 0) return LAST;
-    else if(strcmp("LINB", type) == 0) return LINB;
-    else if(strcmp("LIST", type) == 0) return LIST;
-    else if(strcmp("MESS", type) == 0) return MESS;
-    else if(strcmp("OLDM", type) == 0) return OLDM;
-    else if(strcmp("REGI", type) == 0) return REGI;
-    else if(strcmp("RENO", type) == 0) return RENO;
-    else if(strcmp("REOK", type) == 0) return REOK;
-    else return RUOK;
-}
-
-size_t msglen (enum msg_type type)
+int msglen (msg_type type)
 {
   size_t len = MSG_TYPE_SIZE + MSG_END_SIZE;
   
@@ -67,12 +56,20 @@ size_t msglen (enum msg_type type)
     case LINB:
       return len + MSG_NUM_DIFF_SIZE + 1; // 9
 
-    default: //ACKM, ENDM, IMOK, LIST, RENO, REOK, RUOK
+    case ACKM:
+    case ENDM:
+    case IMOK:
+    case LIST:
+    case RENO:
+    case REOK:
+    case RUOK:
       return len; // 6
-    } 
+    }
+
+  return -1;
 }
 
-const char* msg_type_to_str (enum msg_type type)
+const char* msg_type_to_str (msg_type type)
 {
   switch (type)
     {
@@ -109,7 +106,7 @@ const char* msg_type_to_str (enum msg_type type)
   return NULL;
 }
 
-static void set_msg_type (char *buf, enum msg_type type)
+static void set_msg_type (char *buf, msg_type type)
 {
   strcpy (buf, msg_type_to_str(type));
 }
@@ -161,14 +158,17 @@ static void add_ip_addr (char *buf, struct in_addr *inp)
   buf_end[11] = '.';
 }
 
-char* create_message (char* buf, enum msg_type type, ...)
+char* create_message (char* buf, msg_type type, ...)
 {
   va_list args;
   char *ret;
-  size_t len;
+  int len;
 
   
   len = msglen (type);
+  if (len < 0)
+    return NULL;
+
   
   if (buf == NULL)
     {
@@ -238,4 +238,105 @@ char* create_message (char* buf, enum msg_type type, ...)
   add_msg_end (ret);
   
   return ret;
+}
+
+static bool verify_int (const char *msg, int width)
+{
+  if (!msg)
+    return false;
+  
+  for (int i=0; i < width; i++)
+    {
+      if (!isdigit(msg[i]))
+	return false;
+    }
+  
+  return true;
+}
+
+static bool verify_separator (const char *msg)
+{
+  return msg && msg[0] == SEPARATOR_CHAR;
+}
+
+static bool verify_end (const char *msg)
+{
+  return msg && msg[0] == MSG_END[0] && msg[1] == MSG_END[1];
+}
+
+static bool verify_ip_addr (const char *msg)
+{
+  return msg
+    && verify_int(msg, 3)
+    && msg[3] == '.'
+    && verify_int(msg + 4, 3)
+    && msg[7] == '.'
+    && verify_int(msg + 8, 3)
+    && msg[11] == '.'
+    && verify_int(msg + 12, 3);  
+}
+
+bool verify_msg (const char *msg)
+{
+  msg_type type = get_msg_type (msg);
+  size_t len = strlen(msg);
+  if (type < 0 || len < 6 || len > MAX_MSG_SIZE)
+    return false;    
+    
+  switch (type)
+    {
+    case DIFF:
+    case OLDM:
+      return len == msglen(DIFF)
+	&& verify_separator (msg + MSG_TYPE_SIZE)
+	&& verify_int (msg + MSG_TYPE_SIZE + 1, MSG_NUM_MESS_SIZE)
+	&& verify_separator (msg + MSG_TYPE_SIZE + 1 + MSG_NUM_MESS_SIZE)
+	&& verify_separator (msg + MSG_TYPE_SIZE + 2 + MSG_NUM_MESS_SIZE + MSG_MESS_SIZE)
+	&& verify_end (msg + MSG_TYPE_SIZE + MSG_NUM_MESS_SIZE + MSG_ID_SIZE + MSG_MESS_SIZE + 3);
+	
+    case MESS:
+      return len == msglen(MESS)
+	&& verify_separator (msg + MSG_TYPE_SIZE)
+	&& verify_separator (msg + MSG_TYPE_SIZE + 1 + MSG_ID_SIZE)
+	&& verify_end (msg + MSG_TYPE_SIZE + MSG_ID_SIZE + MSG_MESS_SIZE + 2);
+      
+    case ITEM:
+    case REGI:
+      return len == msglen(ITEM)
+	&& verify_separator (msg + MSG_TYPE_SIZE)
+	&& verify_separator (msg + MSG_TYPE_SIZE + 1 + MSG_ID_SIZE)
+	&& verify_ip_addr   (msg + MSG_TYPE_SIZE + 2 + MSG_ID_SIZE)
+	&& verify_separator (msg + MSG_TYPE_SIZE + 2 + MSG_ID_SIZE + MSG_IP_SIZE)
+	&& verify_int       (msg + MSG_TYPE_SIZE + 3 + MSG_ID_SIZE + MSG_IP_SIZE, MSG_PORT_SIZE)
+	&& verify_separator (msg + MSG_TYPE_SIZE + 3 + MSG_ID_SIZE + MSG_IP_SIZE + MSG_PORT_SIZE)
+	&& verify_ip_addr   (msg + MSG_TYPE_SIZE + 4 + MSG_ID_SIZE + MSG_IP_SIZE + MSG_PORT_SIZE)
+	&& verify_separator (msg + MSG_TYPE_SIZE + 4 + MSG_ID_SIZE + 2*MSG_IP_SIZE + MSG_PORT_SIZE)
+	&& verify_int       (msg + MSG_TYPE_SIZE + 5 + MSG_ID_SIZE + 2*MSG_IP_SIZE + MSG_PORT_SIZE, MSG_PORT_SIZE)
+	&& verify_end       (msg + MSG_TYPE_SIZE + 5 + MSG_ID_SIZE + 2*MSG_IP_SIZE + 2*MSG_PORT_SIZE);
+
+    case LAST:
+      return len == msglen(LAST)
+	&& verify_separator (msg + MSG_TYPE_SIZE)
+	&& verify_int (msg + MSG_TYPE_SIZE + 1, MSG_NB_MESS_SIZE)
+	&& verify_end (msg + MSG_TYPE_SIZE + 1 + MSG_NB_MESS_SIZE);
+
+    case LINB:      
+      return len == msglen(LINB)
+	&& verify_separator (msg + MSG_TYPE_SIZE)
+	&& verify_int (msg + MSG_TYPE_SIZE + 1, MSG_NUM_DIFF_SIZE)
+	&& verify_end (msg + MSG_TYPE_SIZE + 1 + MSG_NUM_DIFF_SIZE);
+      
+      
+    case ACKM:
+    case ENDM:
+    case IMOK:
+    case LIST:
+    case RENO:
+    case REOK:
+    case RUOK:      
+      return len == msglen(ACKM)
+	&& verify_end (msg + MSG_TYPE_SIZE);
+    }
+
+  return false;
 }
