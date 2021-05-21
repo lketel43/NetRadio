@@ -241,7 +241,7 @@ public class Streamer{
 
     public static void displayLastMess(int nbMess){
         System.out.println("##########################################################################\n" +
-                            display("# Un utilisateur a demande e consulter les " + Integer.toString(nbMess) + " derniers messages diffuses", 74) + "\n" +
+                            display("# Un utilisateur a demande a consulter les " + Integer.toString(nbMess) + " derniers messages diffuses", 74) + "\n" +
                             "##########################################################################\n"
                             );
     }
