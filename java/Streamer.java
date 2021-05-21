@@ -362,8 +362,7 @@ public class Streamer{
             StreamFile.addMessFromFile(s, args[1]);
             Pair p = StreamFile.getManagerInfo(args[2]);
             StreamFile.addImagesFromFile(s, args[3]);
-            //startStream(s, p.getAddr(), p.getPort(), true);
-            startStream(s, null, -1, true);
+            startStream(s, p.getAddr(), p.getPort(), true);
         }
         else System.out.println("Wrong options");
     }
