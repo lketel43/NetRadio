@@ -1,0 +1,51 @@
+STREAMER
+Bienvenu sur le projet Reseau. Ceci est un message du professeur qui est desole que l'enseignement est eu lieu en distanciel.
+Ce projet de programmation est vraiment extremement interessant et il permet de voir differents aspects de la programmation reseaux.
+Diffusion de differents proverbes en latin et en anglais avec leur traduction.
+Ars longa, vita brevis : L'art est long, la vie est courte.
+Audaces fortuna juvat : La fortune favorise les audacieux.
+Cave Canem : Attention au chien.
+Contraria contrariis curantur : Les contraires se guerissent par les contraires.
+De gustibus et coloribus non disputandum : Des gouts et des couleurs, il ne faut pas discuter.
+Divide ut reges : Divise afin de regner.
+Better late than never : Mieux vaut tard que jamais.
+Don't put the cart before the horse : Il ne faut pas mettre la charrue avant les boeufs.
+A picture is worth a thousand words : Une image vaut mille mots.
+Don't put all your eggs in one basket : Il ne faut pas mettre tous ses oeufs dans le meme panier.
+You can't have your cake and eat it too : On ne peut pas avoir le beurre et l'argent du beurre.
+Better safe than sorry : Deux precautions valent mieux qu'une.
+Don't judge a book by its cover : Ne jugez pas un livre a sa couverture.
+Old habits die hard : Les habitudes ont la vie dure.
+Charity begins at home : Charite bien ordonnee commence par soi-meme.
+Might makes right : La raison du plus fort est toujours la meilleure.
+No news is good news : Pas de nouvelles, bonnes nouvelles.
+Practice makes perfect : C'est en forgeant qu'on devient forgeron.
+You reap what you sow : Qui seme le vent recolte la tempete.
+All good things must come to an end! : Toutes les bonnes choses ont une fin !
+An apple a day keeps the doctor away.
+Two wrongs don't make a right.
+Money talks.
+Too many cooks spoil the broth.
+One man's trash is another man's treasure.
+Brevity is the soul of wit.
+Absence makes the heart grow fonder.
+A chain is only as strong as its weakest link.
+If it ain't broke, don't fix it.
+A camel is a horse designed by a committee.
+A cat in gloves catches no mice.
+A a poison tree bears poison fruit.
+Bad money drives out good.
+Beauty is only skin deep.
+Better dead than red.
+Better the devil you know than the devil you don't know.
+Desperate times call for desperate measures.
+Do unto others as you would have them do unto you.
+Don't teach your grandmother how to milk ducks.
+Early to bed, early to rise, makes a man healthy, wealthy and wise
+If it looks like a duck, swims like a duck, and quacks like a duck, then it probably is a duck.
+If you torture the data long enough, it will confess to anything.
+In the country of the blind, the one-eyed man is king.
+Keep your friends close, and your enemies closer.
+Lightning never strikes twice in the same place.
+Necessity is the mother of innovation.
+Never put off until tomorrow what you can do today.

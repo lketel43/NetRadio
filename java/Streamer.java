@@ -351,6 +351,20 @@ public class Streamer{
             StreamFile.addMessFromFile(s, args[1]);
             startStream(s, null, -1, false);
         }
+        else if(args.length == 3){
+            Streamer s = StreamFile.initStreamerFromFile(args[0]);
+            StreamFile.addMessFromFile(s, args[1]);
+            Pair p = StreamFile.getManagerInfo(args[2]);
+            startStream(s, p.getAddr(), p.getPort(), false);
+        }
+        else if (args.length == 4){
+            Streamer s = StreamFile.initStreamerFromFile(args[0]);
+            StreamFile.addMessFromFile(s, args[1]);
+            Pair p = StreamFile.getManagerInfo(args[2]);
+            StreamFile.addImagesFromFile(s, args[3]);
+            //startStream(s, p.getAddr(), p.getPort(), true);
+            startStream(s, null, -1, true);
+        }
         else System.out.println("Wrong options");
     }
     
