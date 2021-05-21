@@ -222,25 +222,28 @@ public class Streamer{
     }
 
     private static void displayClientInfo(Socket sock){
-        System.out.println("#######################################");
-        System.out.println("# Nouvelle connexion avec établie     #");
-        System.out.println(display("# Port local : " + Integer.toString(sock.getLocalPort()), 39));
-        System.out.println(display("# Port distant : " + Integer.toString(sock.getPort ()), 39));
-        System.out.println(display("# Adresse locale : " + sock.getLocalAddress(), 39));
-        System.out.println(display("# Adresse distante : " + sock.getInetAddress(), 39));
-        System.out.println("#######################################\n");
+        System.out.println("#######################################\n" +
+                            "# Nouvelle connexion avec etablie     #" + "\n" +
+                            display("# Port local : " + Integer.toString(sock.getLocalPort()), 39) + "\n" +
+                            display("# Port distant : " + Integer.toString(sock.getPort ()), 39) + "\n" +
+                            display("# Adresse locale : " + sock.getLocalAddress(), 39) + "\n" +
+                            display("# Adresse distante : " + sock.getInetAddress(), 39) + "\n" +
+                            "#######################################\n"
+                            );
     }
 
     public static void displayMessAdded(String id){
-        System.out.println("###########################################");
-        System.out.println(display("# Un message a été diffusé par : " + id, 43));
-        System.out.println("###########################################\n");
+        System.out.println("###########################################\n" +
+                            display("# Un message a ete diffuse par : " + id, 43) + "\n" +
+                            "###########################################\n"
+                          );
     }
 
     public static void displayLastMess(int nbMess){
-        System.out.println("##########################################################################");
-        System.out.println(display("# Un utilisateur a demandé à consulter les " + Integer.toString(nbMess) + " derniers messages diffusés", 74));
-        System.out.println("##########################################################################\n");
+        System.out.println("##########################################################################\n" +
+                            display("# Un utilisateur a demande a consulter les " + Integer.toString(nbMess) + " derniers messages diffuses", 74) + "\n" +
+                            "##########################################################################\n"
+                            );
     }
 
     /**************************************
