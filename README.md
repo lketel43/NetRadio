@@ -21,6 +21,7 @@ Pour une compilation complète à neuf, il faut lancer `make clean all`
     * Fréquence d'envoi des messages (en ms) = 1000
     * Ce diffuseur ne se connectera à aucun gestionnaire
     * Des messages par défaut sont diffusés
+    * Des images par défaut sont diffusées
 * `java -jar Streamer.jar ID PORT_TCP ADRESSE_MULTI PORT_MULTI FREQ`
    * Exemple : `java -jar Streamer.java myStream 4242 225.0.0.0 5001 5000`
    * Ce diffuseur ne se connectera à aucun gestionnaire
@@ -38,6 +39,16 @@ Pour une compilation complète à neuf, il faut lancer `make clean all`
       * la cinquième, la fréquence d'envoi.
    * `messages` contient les messages que l'on souhaite diffuser.
       * La première ligne de ce fichier doit être l'id de l'auteur du message. Ensuite, chaque ligne contient un message.
+* `java -jar Streamer.jar config messages manager`
+   * `config` et `messages` sont comme précédemment.
+   * `manager` est un fichier pour indiquer à quel gestionnaire le diffuseur doit se connecter
+      * La première ligne du fichier contient l'adresse du gestionnaire
+      * La deuxième contient son port
+* `java -jar Streamer.jar config messages manager images`
+   * `config`, `messages`, `manager` sont comme précédemment
+   * `images` est un fichier contenant des chemins vers les images à diffuser
+      * Un chemin par ligne
+
 
 ### Gestionnaire
 Le gestionnaire se lance ainsi : `./manager [OPTION]... PORT [NB_DIFF]`
