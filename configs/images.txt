@@ -1,5 +1,5 @@
-../java/images/i.png
-../java/images/icon.png
-../java/images/im2.png
-../java/images/im3.png
-../java/images/im4.png
+java/images/i.png
+java/images/icon.png
+java/images/im2.png
+java/images/im3.png
+java/images/im4.png
