@@ -30,7 +30,7 @@ clean: cleanc cleanj
 
 # Création du .tar contenant les fichiers .java, .c et Makefile
 tar:
-	tar -cvf $(TAR_NAME) Makefile $(JSRC_DIR) $(CSRC_DIR)
+	tar -cvf $(TAR_NAME) Makefile $(JSRC_DIR) $(CSRC_DIR) README.md doc configs LICENSE
 
 
 #############################
