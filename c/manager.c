@@ -2,6 +2,7 @@
 
 #include "message.h"
 #include "utils.h"
+#include "client.h"
 
 #include <assert.h>
 #include <ctype.h>
@@ -184,10 +185,8 @@ static int monitor_broadcaster (int broadcasterfd, char *canary)
   return -1;
 }
 
-/*
- * Gère la demande d'un diffuseur
- */
-static int handle_broadcaster (int broadcasterfd, const char *regi_msg)
+/* Gère un message de type REGI */
+static int handle_regi (int broadcasterfd, const char *regi_msg)
 {
   char *canary;
   char msg_buf[BUFSIZE];
@@ -239,16 +238,14 @@ int copy_broadcaster_register (char buffer[MAX_REGISTERED_BROADCASTER][REGI_LEN+
   return size;
 }
 
-/*
- * Gère la demande d'un utilisateur
- */
-static int handle_user (int usersockfd)
+/* Gère un message de type LIST */
+static int handle_list (int usersockfd)
 {
   char msg_buf[BUFSIZE];
   char registered_broadcaster[MAX_REGISTERED_BROADCASTER][REGI_LEN+1];
   int nb;
   
-  nb = copy_broadcaster_register (registered_broadcaster);  
+  nb = copy_broadcaster_register (registered_broadcaster);
 
   /*
    * On va envoyer un message [LINB num-diff] où num-diff est un entier compris 
@@ -275,11 +272,53 @@ static int handle_user (int usersockfd)
   return 0;
 }
 
+/* EXTENSION
+ * Gère un message de type MESS */
+static int handle_mess (int usersockfd, const char *mess)
+{
+  // On récupère tous les diffuseurs enregistrés
+  char registered_broadcaster[MAX_REGISTERED_BROADCASTER][REGI_LEN+1];
+  int nb, ret;
+
+  ret = 0;
+  nb = copy_broadcaster_register (registered_broadcaster);
+
+  // On parse MESS
+  char client_id[MSG_ID_SIZE + 1];
+  char client_msg[MSG_MESS_SIZE + 1];
+
+  memmove (client_id, mess + MSG_TYPE_SIZE + 1, MSG_ID_SIZE);
+  client_id[MSG_ID_SIZE] = '\0';
+
+  memmove (client_msg, mess + MSG_TYPE_SIZE + 2 + MSG_ID_SIZE, MSG_MESS_SIZE);
+  client_msg[MSG_MESS_SIZE] = '\0';
+  
+  
+  // TODO: mettre dans une fonction
+  char streamer_ip[MSG_IP_SIZE + 1];
+  char streamer_port[MSG_PORT_SIZE + 1];
+  unsigned int port;
+  for (int i=0; i < nb; i++)
+    {
+      memmove (streamer_ip, registered_broadcaster[i] + MSG_TYPE_SIZE + 4 + MSG_ID_SIZE + MSG_IP_SIZE + MSG_PORT_SIZE, MSG_IP_SIZE);
+      streamer_ip[MSG_IP_SIZE] = '\0';
+      
+      memmove (streamer_port, registered_broadcaster[i] + MSG_TYPE_SIZE + 5 + MSG_ID_SIZE + 2*MSG_IP_SIZE + MSG_PORT_SIZE, MSG_PORT_SIZE);
+      streamer_port[MSG_PORT_SIZE] = '\0';
+      set_uint_from_string(streamer_port, &port);
+
+      verbose_print_message ("Transmission du message vers : ", streamer_ip);
+      
+      ret += send_mess_to_streamer (streamer_ip, port, client_id, client_msg);
+    }
+  
+  return ret;
+}
 
 /*
  * Routine utilisée pour la création des threads
  */
-static void* handle_connection (void *arg)
+static void* handle_tcp (void *arg)
 {
   int clientsockfd, r;
   char msg_buf[BUFSIZE];
@@ -306,7 +345,7 @@ static void* handle_connection (void *arg)
 
   verbose_print_message ("Message recu : ", msg_buf);
   
-  if (r != REGI_LEN && r != LIST_LEN)
+  if (!verify_msg(msg_buf))
     {
       fprintf(stderr, "Wrong message format\n");
       goto quit;
@@ -316,11 +355,15 @@ static void* handle_connection (void *arg)
   switch (type)
     {
     case REGI:
-      handle_broadcaster (clientsockfd, msg_buf);
+      handle_regi (clientsockfd, msg_buf);
       break;
       
     case LIST:
-      handle_user (clientsockfd);
+      handle_list (clientsockfd);
+      break;
+
+    case MESS:
+      handle_mess (clientsockfd, msg_buf);
       break;
 
     default:
@@ -423,7 +466,7 @@ static int start_manager (int serverfd)
 	}
       
       pthread_t thread;
-      if (pthread_create (&thread, NULL, handle_connection, clientsockfd) != 0)
+      if (pthread_create (&thread, NULL, handle_tcp, clientsockfd) != 0)
 	{
 	  perror ("pthread_create");
 	  shutdown (*clientsockfd, SHUT_RDWR);
