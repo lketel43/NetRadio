@@ -31,25 +31,4 @@ public class ClientImagesFrame extends JFrame{
             return null;
         }
     }
-
-    public static void main(String[] args){
-        try{
-        BufferedImage image = ImageIO.read(new File("./cr.png"));
-        ByteArrayOutputStream baos = new ByteArrayOutputStream();
-        ImageIO.write(image, "png", baos);
-        baos.flush();
-        byte[] buffer = baos.toByteArray();
-        System.out.println(buffer.length);
-        ClientImagesFrame frame = new ClientImagesFrame();
-        frame.addImage(buffer);
-        }
-        catch(Exception e){}
-        //JLabel l = new JLabel(new ImageIcon("./im.png"));
-        //frame.add(l);
-        //Container parent = l.getParent(l);
-        //frame.remove(l);
-        //frame.validate();
-        //frame.repaint();
-    }
-
 }
