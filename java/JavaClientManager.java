@@ -26,7 +26,7 @@ public class JavaClientManager{
 
     public static void main(String[] args){
         if(args.length == 2){
-            connectToManager(args[0], Integer.parseInte(args[1]));
+            connectToManager(args[0], Integer.parseInt(args[1]));
         }
     }
 
