@@ -9,7 +9,7 @@ CFLAGS	= -g -Wall -pthread
 # JAVA
 JSRC_DIR   = java/
 JCLASS_DIR = jclass/
-JMAIN_NAME = JavaClient Streamer
+JMAIN_NAME = JavaClient Streamer JavaClientManager
 
 JC = javac
 # Pour JCFLAGS ne pas mettre d'option -cp ou -d
