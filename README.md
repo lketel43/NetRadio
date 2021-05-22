@@ -4,9 +4,9 @@ Projet Réseaux S6
 ## Compilation
 
 Pour compiler:
-- Le projet : `make`
-- Le code c : `make c`
-- Le code java : `make java`
+- Le projet en entier : `make`
+- uniquement le code c : `make c`
+- uniquement le code java : `make java`
 
 Pour une compilation complète à neuf, il faut lancer `make clean all`
 
@@ -74,3 +74,13 @@ On peut lancer le client C pour qu'il communique soit avec un gestionnaire, soit
 Communiquer avec un gestionnaire : ``./client adresse port`` où ``adresse`` et ``port`` sont ceux du gestionnaire en question.  
 Communiquer avec un diffuseur et multidiffuseur : ``./client adresse_diff port_diff adresse_multicast port_multicast fichier`` où ``fichier`` est le fichier où sont affichés les messages diffusés par le multi-diffuseur. La bonne démarche est : Ouvrir un terminal, tapez ``tty`` et copier-coller le résultat affiché à la place de fichier. Ainsi les messages s'afficheront dans ce nouveau terminal.
  
+ ## Architecture
+ Dans `c/` :
+ *  `manager.c` Gestionnaire, même fonctionnement qu'un serveur TCP threadé
+ *  `message.c` Vérification et création des messages
+ *  `message.h` Des constantes utiles pour les messages
+ *  `client_keyboard.c` Client en C interactif
+ *  `client.c` Manipulation d'un client via des fonctions. Utile lorsqu'on code un client "en dur"
+
+Dans `java/` :
+
