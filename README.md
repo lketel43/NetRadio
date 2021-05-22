@@ -83,4 +83,8 @@ Communiquer avec un diffuseur et multidiffuseur : ``./client adresse_diff port_d
  *  `client.c` Manipulation d'un client via des fonctions. Utile lorsqu'on code un client "en dur"
 
 Dans `java/` :
+* `Streamer.java` qui est une classe représentant les diffuseurs
+* `JavaClient.java` le client permettant d'envoyer des messages à un diffuseur et de recevoir les messages envoyés en multicast
+* `JavaClientManager.java` le client permettant d'intéragir avec les gestionnaires
+* D'autres classes permettant de gérer les messages, une petite interface graphique et de créer des threads pour les clients et diffuseurs qui sont multithreadés.
 
